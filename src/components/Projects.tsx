@@ -35,8 +35,8 @@ function ProjectCard({ project }: ProjectCardProps) {
   const isExternal = project.url?.startsWith('http') ?? false
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-card border border-line bg-white shadow-soft transition duration-300 ease-out hover:border-brand-200 hover:shadow-lift motion-safe:hover:-translate-y-1">
-      <div className="relative aspect-[4/3] w-full overflow-hidden border-b border-line bg-surface">
+    <article className="group flex h-full flex-col overflow-hidden rounded-card border border-line bg-white shadow-soft transition duration-300 ease-out hover:border-brand-200 hover:shadow-lift dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-400/40 motion-safe:hover:-translate-y-1">
+      <div className="relative aspect-[4/3] w-full overflow-hidden border-b border-line bg-surface dark:border-slate-700 dark:bg-slate-900">
         {project.thumbnail_url ? (
           <img
             src={project.thumbnail_url}
@@ -47,15 +47,15 @@ function ProjectCard({ project }: ProjectCardProps) {
           />
         ) : (
           /* Placeholder thumbnail — dibuat dari data project, bukan gambar orang. */
-          <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-brand-50">
+          <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-brand-50 dark:bg-brand-900/40">
             <div
               aria-hidden="true"
-              className="absolute inset-0 opacity-70 [background-image:linear-gradient(to_right,var(--color-brand-100)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-brand-100)_1px,transparent_1px)] [background-size:32px_32px]"
+              className="absolute inset-0 opacity-70 [background-image:linear-gradient(to_right,var(--color-brand-100)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-brand-100)_1px,transparent_1px)] [background-size:32px_32px] dark:[background-image:linear-gradient(to_right,var(--color-brand-800)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-brand-800)_1px,transparent_1px)]"
             />
-            <span className="relative font-display text-4xl font-extrabold tracking-tight text-brand-200 transition duration-500 ease-out motion-safe:group-hover:scale-105">
+            <span className="relative font-display text-4xl font-extrabold tracking-tight text-brand-200 transition duration-500 ease-out dark:text-brand-400/70 motion-safe:group-hover:scale-105">
               {getInitials(project.title)}
             </span>
-            <span className="absolute bottom-3 inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
+            <span className="absolute bottom-3 inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 dark:text-slate-400">
               <ImageIcon aria-hidden="true" className="h-3.5 w-3.5" />
               Thumbnail belum ditambahkan
             </span>
@@ -65,12 +65,12 @@ function ProjectCard({ project }: ProjectCardProps) {
         {/* Lapisan hover halus di atas thumbnail. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-navy/0 transition duration-300 ease-out group-hover:bg-navy/5"
+          className="pointer-events-none absolute inset-0 bg-navy/0 transition duration-300 ease-out group-hover:bg-navy/5 dark:group-hover:bg-navy/30"
         />
 
         {category ? (
           <span className="absolute top-4 left-4">
-            <Tag tone="neutral" className="bg-white/95 shadow-soft backdrop-blur-sm">
+            <Tag tone="neutral" className="bg-white/95 shadow-soft backdrop-blur-sm dark:bg-slate-900/95">
               {category}
             </Tag>
           </span>
@@ -80,9 +80,12 @@ function ProjectCard({ project }: ProjectCardProps) {
           <span className="absolute top-4 right-4">
             <Tag
               tone="brand"
-              className="inline-flex items-center gap-1 bg-white/95 shadow-soft backdrop-blur-sm"
+              className="inline-flex items-center gap-1 bg-white/95 shadow-soft backdrop-blur-sm dark:bg-slate-900/95"
             >
-              <Star aria-hidden="true" className="h-3 w-3 fill-brand-600 text-brand-600" />
+              <Star
+                aria-hidden="true"
+                className="h-3 w-3 fill-brand-600 text-brand-600 dark:fill-brand-400 dark:text-brand-400"
+              />
               Featured
             </Tag>
           </span>
@@ -90,16 +93,16 @@ function ProjectCard({ project }: ProjectCardProps) {
       </div>
 
       <div className="flex flex-1 flex-col p-5 sm:p-7">
-        <h3 className="text-base font-bold text-navy transition duration-200 group-hover:text-brand-700 sm:text-lg">
+        <h3 className="text-base font-bold text-navy transition duration-200 group-hover:text-brand-700 dark:text-slate-50 dark:group-hover:text-brand-400 sm:text-lg">
           {project.title}
         </h3>
 
         {project.description ? (
-          <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-500">
+          <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
             {project.description}
           </p>
         ) : (
-          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          <p className="mt-3 text-sm leading-relaxed text-slate-400 dark:text-slate-400">
             Deskripsi project belum ditambahkan.
           </p>
         )}
@@ -118,13 +121,13 @@ function ProjectCard({ project }: ProjectCardProps) {
           )}
         </div>
 
-        <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-5">
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-5 dark:border-slate-700">
           {hasUrl ? (
             <a
               href={project.url ?? '#'}
               target={isExternal ? '_blank' : undefined}
               rel={isExternal ? 'noreferrer' : undefined}
-              className="inline-flex items-center gap-2 rounded-sm text-sm font-semibold text-brand-700 transition duration-200 ease-out hover:gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-2 rounded-sm text-sm font-semibold text-brand-700 transition duration-200 ease-out hover:gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 dark:text-brand-400 dark:hover:text-brand-300 dark:focus-visible:ring-offset-slate-900"
             >
               {uiCopy.viewProject}
               <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
@@ -132,7 +135,7 @@ function ProjectCard({ project }: ProjectCardProps) {
           ) : (
             <span
               title="Tautan project belum ditambahkan"
-              className="inline-flex cursor-not-allowed items-center gap-2 text-sm font-semibold text-slate-400"
+              className="inline-flex cursor-not-allowed items-center gap-2 text-sm font-semibold text-slate-400 dark:text-slate-400"
             >
               {uiCopy.viewProject}
               <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
@@ -192,11 +195,11 @@ export default function Projects({ projects, filters, sections }: ProjectsProps)
     <Section
       id="projects"
       size="large"
-      className="relative overflow-hidden border-y border-brand-100/70 bg-brand-50/50"
+      className="relative overflow-hidden border-y border-brand-100/70 bg-brand-50/50 dark:border-brand-900/60 dark:bg-brand-900/30"
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-24 right-[-8rem] h-72 w-72 rounded-full bg-brand-100/50 blur-3xl"
+        className="pointer-events-none absolute -top-24 right-[-8rem] h-72 w-72 rounded-full bg-brand-100/50 blur-3xl dark:bg-brand-500/20"
       />
 
       <Container className="relative">
@@ -213,7 +216,7 @@ export default function Projects({ projects, filters, sections }: ProjectsProps)
               value={currentFilter}
               onChange={setActiveFilter}
               ariaLabel="Filter kategori project"
-              className="self-start bg-white lg:self-auto"
+              className="self-start bg-white lg:self-auto dark:bg-slate-800"
             />
           ) : null}
         </div>
@@ -227,13 +230,13 @@ export default function Projects({ projects, filters, sections }: ProjectsProps)
             ))}
           </div>
         ) : (
-          <div className="mt-12 rounded-card border border-dashed border-brand-100 bg-white/70 p-10 text-center">
+          <div className="mt-12 rounded-card border border-dashed border-brand-100 bg-white/70 p-10 text-center dark:border-brand-900/70 dark:bg-slate-800/70">
             <PlaceholderNote>
               {publishedProjects.length === 0
                 ? 'Belum ada project yang ditambahkan'
                 : 'Belum ada project pada kategori ini'}
             </PlaceholderNote>
-            <p className="mt-3 text-sm text-slate-400">
+            <p className="mt-3 text-sm text-slate-400 dark:text-slate-400">
               Project dapat ditambahkan melalui admin dashboard atau langsung ke
               database.
             </p>

@@ -27,7 +27,7 @@ export default function FilterTabs<T extends string>({
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        'inline-flex flex-wrap items-center gap-1 rounded-pill border border-line bg-white p-1 shadow-soft',
+        'inline-flex flex-wrap items-center gap-1 rounded-pill border border-line bg-white p-1 shadow-soft dark:border-slate-700 dark:bg-slate-800',
         className,
       )}
     >
@@ -43,8 +43,8 @@ export default function FilterTabs<T extends string>({
             className={cn(
               'inline-flex items-center gap-1.5 rounded-pill px-3.5 py-1.5 text-sm font-medium transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-1',
               isActive
-                ? 'bg-brand-600 text-white shadow-soft'
-                : 'text-slate-600 hover:bg-brand-50 hover:text-brand-700',
+                ? 'bg-brand-600 text-white shadow-soft dark:bg-brand-400 dark:text-navy'
+                : 'text-slate-600 hover:bg-brand-50 hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-brand-300',
             )}
           >
             {option.label}
@@ -52,7 +52,9 @@ export default function FilterTabs<T extends string>({
               <span
                 className={cn(
                   'rounded-pill px-1.5 text-[11px] tabular-nums',
-                  isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500',
+                  isActive
+                    ? 'bg-white/20 text-white dark:bg-navy/25 dark:text-navy'
+                    : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300',
                 )}
               >
                 {option.count}

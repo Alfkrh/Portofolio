@@ -80,8 +80,8 @@ export default function AdminHeader({
           <button
             type="button"
             onClick={() => void onLogout()}
-            title="Keluar"
-            aria-label="Keluar"
+            title="Logout"
+            aria-label="Logout"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-slate-500 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
           >
             <LogOut aria-hidden="true" className="h-4 w-4" />

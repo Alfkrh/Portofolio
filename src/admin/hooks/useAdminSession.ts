@@ -8,6 +8,7 @@ import {
   createFirstAdmin,
   getAdminSessionSnapshot,
   loadAdminSession,
+  refreshAdminSession,
   signOutAdmin,
   signOutEverywhere,
   subscribeAdminSession,
@@ -18,6 +19,8 @@ import {
 export interface UseAdminSessionResult extends AdminSessionSnapshot {
   isRetrying: boolean
   reload: () => Promise<void>
+  /** Periksa ulang sesi secara diam-diam (tanpa layar galat/loading). */
+  refresh: () => Promise<void>
   /** Login akun admin. Mengembalikan pesan galat, atau `null` bila berhasil. */
   login: (email: string, password: string) => Promise<string | null>
   /** Buat akun admin pertama (saat belum ada akun di database). */
@@ -49,6 +52,8 @@ export function useAdminSession(): UseAdminSessionResult {
     }
   }, [])
 
+  const refresh = useCallback(() => refreshAdminSession(), [])
+
   const login = useCallback(
     (email: string, password: string) => loginWithPassword(email, password),
     [],
@@ -63,5 +68,14 @@ export function useAdminSession(): UseAdminSessionResult {
 
   const logoutAll = useCallback(() => signOutEverywhere(), [])
 
-  return { ...snapshot, isRetrying, reload, login, setup, logout, logoutAll }
+  return {
+    ...snapshot,
+    isRetrying,
+    reload,
+    refresh,
+    login,
+    setup,
+    logout,
+    logoutAll,
+  }
 }

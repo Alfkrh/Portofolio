@@ -23,7 +23,11 @@ import {
   UserRound,
 } from 'lucide-react'
 import IconTile from '../../components/ui/IconTile'
-import { MIN_PASSWORD_LENGTH, SESSION_TTL_DAYS } from '../../config/authPolicy'
+import {
+  ADMIN_ROLE,
+  MIN_PASSWORD_LENGTH,
+  SESSION_TTL_DAYS,
+} from '../../config/authPolicy'
 import { SITE_SETTING_DEFAULTS } from '../../config/siteSettings'
 import { sectionFallbacks } from '../../config/siteCopy'
 import { formatDateTime } from '../../lib/formatDate'
@@ -644,6 +648,12 @@ export default function AdminSettings({
       >
         <ul className="divide-y divide-line rounded-card border border-line">
           {[
+            {
+              label: 'Role akun',
+              value: session.role ?? 'Tidak diketahui',
+              detail: `Hanya akun ber-role ${ADMIN_ROLE} yang boleh membuka dashboard; role lain ditolak server dengan 403.`,
+              ok: session.role === ADMIN_ROLE,
+            },
             {
               label: 'Protected admin routes',
               value: 'Aktif',

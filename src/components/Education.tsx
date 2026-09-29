@@ -17,7 +17,7 @@ interface EducationProps {
 
 export default function Education({ items, sections }: EducationProps) {
   return (
-    <Section id="education" className="border-y border-line bg-white">
+    <Section id="education" className="border-y border-line bg-white dark:border-slate-800 dark:bg-gray-900">
       <Container>
         <SectionHeading
           eyebrow={sectionText(sections, 'education.eyebrow')}
@@ -26,7 +26,7 @@ export default function Education({ items, sections }: EducationProps) {
         />
 
         {items.length === 0 ? (
-          <div className="mt-12 rounded-card border border-dashed border-line bg-surface/60 p-8 text-center">
+          <div className="mt-12 rounded-card border border-dashed border-line bg-surface/60 p-8 text-center dark:border-slate-700 dark:bg-slate-800/60">
             <PlaceholderNote>Belum ada data pendidikan</PlaceholderNote>
           </div>
         ) : (
@@ -40,10 +40,10 @@ export default function Education({ items, sections }: EducationProps) {
               return (
                 <li key={item.id}>
                   <Reveal delay={index * 80} className="block">
-                    <div className="relative overflow-hidden rounded-card border border-line bg-surface/60 p-6 shadow-soft transition duration-300 ease-out hover:border-brand-200 hover:bg-white hover:shadow-lift motion-safe:hover:-translate-y-1 sm:p-7">
+                    <div className="relative overflow-hidden rounded-card border border-line bg-surface/60 p-6 shadow-soft transition duration-300 ease-out hover:border-brand-200 hover:bg-white hover:shadow-lift dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-400/40 dark:hover:bg-slate-700/70 motion-safe:hover:-translate-y-1 sm:p-7">
                       <div
                         aria-hidden="true"
-                        className="absolute top-0 right-0 h-32 w-32 rounded-full bg-brand-50 blur-2xl"
+                        className="absolute top-0 right-0 h-32 w-32 rounded-full bg-brand-50 blur-2xl dark:bg-brand-500/20"
                       />
 
                       <div className="relative flex flex-wrap items-start justify-between gap-4">
@@ -54,11 +54,11 @@ export default function Education({ items, sections }: EducationProps) {
                             tone="solid"
                           />
                           <div>
-                            <h3 className="text-lg font-bold text-navy sm:text-xl">
+                            <h3 className="text-lg font-bold text-navy dark:text-slate-50 sm:text-xl">
                               {item.institution}
                             </h3>
                             {degreeLabel ? (
-                              <p className="mt-1 text-sm font-semibold text-brand-700">
+                              <p className="mt-1 text-sm font-semibold text-brand-700 dark:text-brand-400">
                                 {degreeLabel}
                               </p>
                             ) : null}
@@ -75,15 +75,15 @@ export default function Education({ items, sections }: EducationProps) {
                       </div>
 
                       <div className="relative mt-6 sm:mt-8">
-                        <h4 className="text-[11px] font-semibold tracking-[0.14em] text-slate-400 uppercase">
+                        <h4 className="text-[11px] font-semibold tracking-[0.14em] text-slate-400 uppercase dark:text-slate-400">
                           Deskripsi
                         </h4>
                         {item.description ? (
-                          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500">
+                          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500 dark:text-slate-400">
                             {item.description}
                           </p>
                         ) : (
-                          <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                          <p className="mt-2 text-sm leading-relaxed text-slate-400 dark:text-slate-400">
                             Deskripsi pendidikan belum ditambahkan.
                           </p>
                         )}

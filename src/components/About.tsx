@@ -38,7 +38,7 @@ export default function About({ profile, sections }: AboutProps) {
   ].filter((fact) => Boolean(fact.value && fact.value.trim().length > 0))
 
   return (
-    <Section id="about" className="border-y border-line bg-white">
+    <Section id="about" className="border-y border-line bg-white dark:border-slate-800 dark:bg-gray-900">
       <Container>
         <SectionHeading
           eyebrow={sectionText(sections, 'about.eyebrow')}
@@ -49,12 +49,12 @@ export default function About({ profile, sections }: AboutProps) {
           <div className="lg:col-span-3">
             {paragraphs.length > 0 ? (
               <>
-                <p className="font-display text-lg leading-relaxed font-semibold text-navy sm:text-xl">
+                <p className="font-display text-lg leading-relaxed font-semibold text-navy dark:text-slate-50 sm:text-xl">
                   {paragraphs[0]}
                 </p>
 
                 {paragraphs.length > 1 ? (
-                  <div className="mt-5 space-y-4 text-base leading-relaxed text-slate-500">
+                  <div className="mt-5 space-y-4 text-base leading-relaxed text-slate-500 dark:text-slate-400">
                     {paragraphs.slice(1).map((paragraph) => (
                       <p key={paragraph}>{paragraph}</p>
                     ))}
@@ -76,21 +76,21 @@ export default function About({ profile, sections }: AboutProps) {
 
           <Reveal className="lg:col-span-2" delay={100}>
             {facts.length > 0 ? (
-              <ul className="grid gap-px overflow-hidden rounded-card border border-line bg-line shadow-soft sm:grid-cols-2 lg:grid-cols-1">
+              <ul className="grid gap-px overflow-hidden rounded-card border border-line bg-line shadow-soft dark:border-slate-700 dark:bg-slate-700 sm:grid-cols-2 lg:grid-cols-1">
                 {facts.map((fact) => {
                   const Icon = FACT_ICONS[fact.id] ?? BookOpen
 
                   return (
                     <li
                       key={fact.id}
-                      className="flex items-start gap-4 bg-white p-4 transition duration-200 hover:bg-brand-50/40 sm:p-5"
+                      className="flex items-start gap-4 bg-white p-4 transition duration-200 hover:bg-brand-50/40 dark:bg-slate-800 dark:hover:bg-slate-700/70 sm:p-5"
                     >
                       <IconTile icon={Icon} size="md" tone="soft" />
                       <span className="min-w-0">
-                        <span className="block text-[11px] font-semibold tracking-[0.14em] text-slate-400 uppercase">
+                        <span className="block text-[11px] font-semibold tracking-[0.14em] text-slate-400 uppercase dark:text-slate-400">
                           {fact.label}
                         </span>
-                        <span className="mt-1 block text-sm font-semibold text-navy">
+                        <span className="mt-1 block text-sm font-semibold text-navy dark:text-slate-100">
                           {fact.value}
                         </span>
                       </span>

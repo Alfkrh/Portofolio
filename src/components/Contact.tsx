@@ -7,6 +7,7 @@ import IconTile from './ui/IconTile'
 import Section from './ui/Section'
 import SectionHeading from './ui/SectionHeading'
 import { getContactIcon } from '../lib/contactIcons'
+import { contactHref, isExternalHref } from '../lib/contactLinks'
 
 interface ContactProps {
   contacts: ContactChannel[]
@@ -17,7 +18,7 @@ export default function Contact({ contacts, sections }: ContactProps) {
   const hasAnyLink = contacts.some((contact) => Boolean(contact.url))
 
   return (
-    <Section id="contact" className="relative overflow-hidden bg-navy">
+    <Section id="contact" className="relative overflow-hidden bg-navy dark:bg-gray-900">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 right-[-4rem] h-72 w-72 rounded-full bg-brand-600/20 blur-3xl" />
         <div className="absolute bottom-[-6rem] left-[-6rem] h-64 w-64 rounded-full bg-brand-500/10 blur-3xl" />
@@ -37,6 +38,10 @@ export default function Contact({ contacts, sections }: ContactProps) {
               <ul className="mt-9 space-y-3">
                 {contacts.map((contact) => {
                   const label = contact.label ?? contact.kind
+                  // Tautan dirapikan dulu (mis. email polos → `mailto:`) supaya
+                  // tidak jadi tautan relatif yang rusak.
+                  const href = contact.url ? contactHref(contact.url) : null
+                  const isExternal = href ? isExternalHref(href) : false
 
                   const inner = (
                     <>
@@ -65,18 +70,12 @@ export default function Contact({ contacts, sections }: ContactProps) {
 
                   return (
                     <li key={contact.id}>
-                      {contact.url ? (
+                      {href ? (
                         <a
-                          href={contact.url}
-                          target={
-                            contact.url.startsWith('http') ? '_blank' : undefined
-                          }
-                          rel={
-                            contact.url.startsWith('http')
-                              ? 'noreferrer'
-                              : undefined
-                          }
-                          className="group flex items-center gap-4 rounded-card border border-white/10 bg-white/5 p-4 transition duration-200 ease-out hover:border-brand-400/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-navy sm:p-5"
+                          href={href}
+                          target={isExternal ? '_blank' : undefined}
+                          rel={isExternal ? 'noreferrer' : undefined}
+                          className="group flex items-center gap-4 rounded-card border border-white/10 bg-white/5 p-4 transition duration-200 ease-out hover:border-brand-400/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-navy dark:focus-visible:ring-offset-gray-900 sm:p-5"
                         >
                           {inner}
                         </a>

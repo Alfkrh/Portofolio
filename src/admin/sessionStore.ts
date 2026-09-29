@@ -5,7 +5,11 @@
  * dan menyediakan aksi login, setup awal, logout, dan logout semua perangkat.
  */
 
-import { clearAdminToken, setAdminSession } from '../services/adminToken'
+import {
+  clearAdminToken,
+  getAdminToken,
+  setAdminSession,
+} from '../services/adminToken'
 import {
   fetchSession,
   loginAdmin as loginRequest,
@@ -47,11 +51,22 @@ export function getAdminSessionSnapshot(): AdminSessionSnapshot {
   return snapshot
 }
 
+/**
+ * Terapkan hasil pemeriksaan sesi dari server.
+ *
+ * Kalau server menyatakan belum login padahal browser masih menyimpan token
+ * (sesi dicabut dari perangkat lain, kedaluwarsa, atau akun dihapus), token
+ * basi itu dibuang supaya tidak ikut terkirim pada request berikutnya.
+ */
+function applySession(session: AdminSession): void {
+  if (!session.authenticated && getAdminToken()) clearAdminToken()
+  setSnapshot({ status: 'ready', session, error: null })
+}
+
 /** Baca status login dari server (memakai token yang tersimpan, bila ada). */
 export async function loadAdminSession(): Promise<void> {
   try {
-    const session = await fetchSession()
-    setSnapshot({ status: 'ready', session, error: null })
+    applySession(await fetchSession())
   } catch (cause) {
     setSnapshot({
       status: 'error',
@@ -61,6 +76,19 @@ export async function loadAdminSession(): Promise<void> {
           ? cause.message
           : 'Status admin tidak bisa diperiksa.',
     })
+  }
+}
+
+/**
+ * Periksa ulang sesi tanpa mengganggu layar yang sedang dipakai (dipakai
+ * watchdog kedaluwarsa). Galat jaringan sesaat diabaikan supaya admin tidak
+ * terlempar keluar dari dashboard hanya karena koneksi tersendat.
+ */
+export async function refreshAdminSession(): Promise<void> {
+  try {
+    applySession(await fetchSession())
+  } catch {
+    // Pertahankan status terakhir; permintaan tulis tetap divalidasi server.
   }
 }
 

@@ -1,9 +1,20 @@
 @import 'tailwindcss';
 
 /* ---------------------------------------------------------------------------
+   Dark Mode — Tailwind v4 memakai varian `dark:` berbasis media query secara
+   bawaan. Karena mode ini di-toggle lewat class `.dark` pada <html>
+   (lihat `src/services/themeStore.ts`), varian-nya didefinisikan ulang di sini.
+   Semua warna gelap memakai utilitas `dark:*` — tidak ada CSS manual.
+--------------------------------------------------------------------------- */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
    Design tokens — Alif Fikri portfolio
    Palette: primary blue #2563EB, secondary blue #1D4ED8, dark navy #0F172A,
    background #F8FAFC, white #FFFFFF, border #E2E8F0
+
+   Dark: bg utama #0F172A, bg section #111827, teks #F8FAFC/#94A3B8,
+   border #1E293B, biru #60A5FA, card #1E293B (tanpa #000000).
 --------------------------------------------------------------------------- */
 @theme {
   --font-sans:
@@ -54,17 +65,25 @@
     /* Keep anchor targets clear of the sticky navbar. */
     scroll-padding-top: 5.5rem;
     -webkit-text-size-adjust: 100%;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
-    @apply bg-surface font-sans text-slate-600 antialiased;
+    @apply bg-surface font-sans text-slate-600 antialiased dark:bg-slate-900 dark:text-slate-400;
+    transition:
+      background-color 300ms ease,
+      color 300ms ease;
   }
 
   h1,
   h2,
   h3,
   h4 {
-    @apply font-display text-navy;
+    @apply font-display text-navy dark:text-slate-50;
     text-wrap: balance;
   }
 
@@ -73,7 +92,20 @@
   }
 
   ::selection {
-    @apply bg-brand-600 text-white;
+    @apply bg-brand-600 text-white dark:bg-brand-500 dark:text-white;
+  }
+}
+
+/* Transisi warna yang halus dan ringan saat mode berganti — hanya properti
+   warna, dihormati jika user memakai reduced-motion. Utilitas `transition`
+   dari komponen tetap menang karena berada di layer yang lebih tinggi. */
+@media (prefers-reduced-motion: no-preference) {
+  *,
+  ::before,
+  ::after {
+    transition-property: color, background-color, border-color, fill, stroke;
+    transition-duration: 300ms;
+    transition-timing-function: ease;
   }
 }
 

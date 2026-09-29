@@ -36,36 +36,36 @@ function TimelineItem({ item, isLast, delay }: TimelineItemProps) {
       <div className="flex flex-col items-center pt-6 sm:pt-7">
         <span
           aria-hidden="true"
-          className="h-3 w-3 rounded-full border-2 border-brand-600 bg-white ring-4 ring-brand-50 transition duration-300 group-hover:bg-brand-600"
+          className="h-3 w-3 rounded-full border-2 border-brand-600 bg-white ring-4 ring-brand-50 transition duration-300 group-hover:bg-brand-600 dark:border-brand-400 dark:bg-slate-900 dark:ring-brand-900/50 dark:group-hover:bg-brand-400"
         />
         <span
           aria-hidden="true"
-          className={cn('mt-2 w-px flex-1 bg-line', isLast && 'hidden')}
+          className={cn('mt-2 w-px flex-1 bg-line dark:bg-slate-700', isLast && 'hidden')}
         />
       </div>
 
-      <article className="mb-6 rounded-card border border-line bg-white p-5 shadow-soft transition duration-300 ease-out group-hover:border-brand-200 group-hover:shadow-lift motion-safe:group-hover:-translate-y-1 sm:p-7">
+      <article className="mb-6 rounded-card border border-line bg-white p-5 shadow-soft transition duration-300 ease-out group-hover:border-brand-200 group-hover:shadow-lift dark:border-slate-700 dark:bg-slate-800 dark:group-hover:border-brand-400/40 motion-safe:group-hover:-translate-y-1 sm:p-7">
         <div className="flex flex-wrap items-center gap-3">
           <Tag tone="brand">{item.type}</Tag>
           {period ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-400">
               <Calendar aria-hidden="true" className="h-3.5 w-3.5" />
               {period}
             </span>
           ) : null}
         </div>
 
-        <h4 className="mt-4 text-base font-bold text-navy sm:text-lg">
+        <h4 className="mt-4 text-base font-bold text-navy dark:text-slate-50 sm:text-lg">
           {item.position}
         </h4>
 
-        <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-brand-700">
+        <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 dark:text-brand-400">
           <Building2 aria-hidden="true" className="h-4 w-4" />
           {item.company}
         </p>
 
         {item.description ? (
-        <p className="mt-4 text-sm leading-relaxed text-slate-500">
+        <p className="mt-4 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
           {item.description}
         </p>
         ) : null}
@@ -141,11 +141,11 @@ export default function Experience({ items, sections }: ExperienceProps) {
         </div>
 
         {isEmpty ? (
-          <div className="mt-12 rounded-card border border-dashed border-line bg-white/60 p-8 text-center">
+          <div className="mt-12 rounded-card border border-dashed border-line bg-white/60 p-8 text-center dark:border-slate-700 dark:bg-slate-800/60">
             <PlaceholderNote>
               Belum ada pengalaman yang ditambahkan
             </PlaceholderNote>
-            <p className="mt-3 text-sm text-slate-400">
+            <p className="mt-3 text-sm text-slate-400 dark:text-slate-400">
               Data pengalaman dapat ditambahkan melalui admin dashboard atau
               langsung ke database.
             </p>
@@ -158,11 +158,11 @@ export default function Experience({ items, sections }: ExperienceProps) {
               return (
                 <div key={group.type}>
                   <div className="flex items-center gap-3">
-                    <h3 className="text-sm font-semibold tracking-[0.14em] text-slate-400 uppercase">
+                    <h3 className="text-sm font-semibold tracking-[0.14em] text-slate-400 uppercase dark:text-slate-400">
                       {group.type}
                     </h3>
-                    <span aria-hidden="true" className="h-px flex-1 bg-line" />
-                    <span className="text-xs font-medium text-slate-400 tabular-nums">
+                    <span aria-hidden="true" className="h-px flex-1 bg-line dark:bg-slate-700" />
+                    <span className="text-xs font-medium text-slate-400 tabular-nums dark:text-slate-400">
                       {group.items.length}
                     </span>
                   </div>

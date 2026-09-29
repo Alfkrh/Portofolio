@@ -12,6 +12,8 @@ interface CommonProps {
   /** Optional leading/trailing icon. */
   icon?: LucideIcon
   iconPosition?: 'left' | 'right'
+  /** Kelas tambahan untuk ikon, mis. `animate-spin` saat tombol memuat. */
+  iconClassName?: string
   fullWidth?: boolean
   className?: string
 }
@@ -28,10 +30,10 @@ export type ButtonProps = AnchorProps | NativeButtonProps
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-brand-600 text-white shadow-soft hover:bg-brand-700 hover:shadow-lift',
+    'bg-brand-600 text-white shadow-soft hover:bg-brand-700 hover:shadow-lift dark:bg-brand-400 dark:text-navy dark:hover:bg-brand-300',
   secondary:
-    'border border-line bg-white text-navy shadow-soft hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700',
-  ghost: 'text-brand-700 hover:bg-brand-50',
+    'border border-line bg-white text-navy shadow-soft hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-brand-400/50 dark:hover:bg-slate-700 dark:hover:text-brand-300',
+  ghost: 'text-brand-700 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-slate-800',
   onDark: 'border border-white/15 bg-white/5 text-white hover:bg-white/10',
 }
 
@@ -42,7 +44,7 @@ const sizeClasses: Record<ButtonSize, string> = {
 }
 
 const baseClasses =
-  'inline-flex items-center justify-center rounded-pill font-semibold whitespace-nowrap transition duration-200 ease-out select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60 motion-safe:hover:-translate-y-0.5'
+  'inline-flex items-center justify-center rounded-pill font-semibold whitespace-nowrap transition duration-200 ease-out select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 dark:focus-visible:ring-brand-400 dark:focus-visible:ring-offset-slate-900 disabled:pointer-events-none disabled:opacity-60 motion-safe:hover:-translate-y-0.5'
 
 /**
  * Renders an `<a>` when `href` is provided, otherwise a `<button>`.
@@ -55,6 +57,7 @@ export default function Button(props: ButtonProps) {
     size = 'md',
     icon: Icon,
     iconPosition = 'right',
+    iconClassName,
     fullWidth = false,
     className,
     ...rest
@@ -71,11 +74,11 @@ export default function Button(props: ButtonProps) {
   const content = (
     <>
       {Icon && iconPosition === 'left' ? (
-        <Icon aria-hidden="true" className="h-4 w-4" />
+        <Icon aria-hidden="true" className={cn('h-4 w-4', iconClassName)} />
       ) : null}
       <span>{children}</span>
       {Icon && iconPosition === 'right' ? (
-        <Icon aria-hidden="true" className="h-4 w-4" />
+        <Icon aria-hidden="true" className={cn('h-4 w-4', iconClassName)} />
       ) : null}
     </>
   )

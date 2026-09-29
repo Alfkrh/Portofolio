@@ -216,7 +216,7 @@ export const seedData: SeedData = {
     'contact.description':
       'Have a project, opportunity, or just want to say hello? Feel free to reach out.',
     'contact.form_note':
-      'Form ini masih demo (belum terhubung ke backend). Hubungkan ke API/database pada tahap berikutnya.',
+      'Pesanmu langsung tersimpan di dashboard admin — balasannya dikirim ke email yang kamu isi.',
     'footer.tagline': 'Information Systems Student & Digital Creative',
   },
 }

@@ -83,12 +83,12 @@ export default function AdminLogin({
         <IconTile icon={Icon} size="lg" tone="solid" />
 
         <h1 className="mt-5 font-display text-xl font-extrabold tracking-tight text-navy">
-          {setupRequired ? 'Buat akun admin' : 'Masuk ke Admin Dashboard'}
+          {setupRequired ? 'Buat Akun Admin' : 'Welcome Back'}
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-500">
           {setupRequired
             ? 'Belum ada akun admin di database ini. Buat akun pertama untuk mengamankan dashboard — semua endpoint tulis hanya bisa dipakai setelah login.'
-            : 'Dashboard ini diproteksi. Masuk dengan akun admin untuk mengelola konten portfolio.'}
+            : 'Sign in to manage your portfolio.'}
         </p>
 
         <form onSubmit={(event) => void handleSubmit(event)} className="mt-6">
@@ -96,7 +96,7 @@ export default function AdminLogin({
             htmlFor="admin-email"
             className="block text-xs font-semibold tracking-wide text-navy"
           >
-            Email admin
+            Email
           </label>
 
           <input
@@ -187,10 +187,10 @@ export default function AdminLogin({
             {isSubmitting
               ? setupRequired
                 ? 'Membuat akun…'
-                : 'Memeriksa…'
+                : 'Signing in…'
               : setupRequired
                 ? 'Buat akun & masuk'
-                : 'Masuk'}
+                : 'Sign In'}
           </button>
         </form>
 

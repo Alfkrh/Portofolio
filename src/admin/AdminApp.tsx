@@ -6,9 +6,16 @@
  * diakses setelah token diverifikasi.
  */
 
-import { useEffect, useState } from 'react'
-import { LoaderCircle, RefreshCw, TriangleAlert } from 'lucide-react'
-import { siteSetting } from '../config/siteSettings'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  LoaderCircle,
+  LogOut,
+  RefreshCw,
+  ShieldX,
+  TriangleAlert,
+} from 'lucide-react'
+import { ADMIN_ROLE } from '../config/authPolicy'
+import { customMarkUrl, siteSetting } from '../config/siteSettings'
 import Button from '../components/ui/Button'
 import { usePortfolio } from '../hooks/usePortfolio'
 import { navigate, useLocation } from '../lib/useLocation'
@@ -33,6 +40,7 @@ import AdminProfile from './pages/AdminProfile'
 import AdminProjects from './pages/AdminProjects'
 import AdminSettings from './pages/AdminSettings'
 import AdminSkills from './pages/AdminSkills'
+import ContactInbox from './ContactInbox'
 import { AdminAlert, AdminPanel, AdminSkeletonRows } from './ui/AdminPanels'
 
 /** Layar status tingkat halaman (sesi admin / data portfolio belum siap). */
@@ -79,6 +87,55 @@ function AdminStatusScreen({
   )
 }
 
+/**
+ * Layar "Access Denied" untuk akun yang login dengan benar tetapi bukan admin.
+ * Server sudah menolak endpoint tulis (403) untuk akun seperti ini, jadi layar
+ * ini hanya menutup akses UI-nya.
+ */
+function AdminAccessDenied({
+  email,
+  role,
+  onLogout,
+}: {
+  email: string | null
+  role: string | null
+  onLogout: () => void | Promise<void>
+}) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-surface px-5 py-16">
+      <div className="w-full max-w-lg rounded-card border border-line bg-white p-6 text-center shadow-soft sm:p-8">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+          <ShieldX aria-hidden="true" className="h-6 w-6" />
+        </span>
+
+        <h1 className="mt-5 font-display text-xl font-bold text-navy">
+          Access Denied
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-slate-500">
+          Akun <span className="font-semibold text-navy">{email ?? 'ini'}</span>{' '}
+          berhasil login, tetapi tidak memiliki role{' '}
+          <span className="font-semibold text-navy">{ADMIN_ROLE}</span>.
+          {role ? ` Role saat ini: ${role}.` : ''} Seluruh halaman /admin dan
+          endpoint tulis hanya untuk admin.
+        </p>
+
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+          <Button
+            onClick={() => void onLogout()}
+            icon={LogOut}
+            iconPosition="left"
+          >
+            Logout
+          </Button>
+          <Button variant="secondary" onClick={() => navigate('/')}>
+            Kembali ke situs publik
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /** Rute admin yang tidak dikenal. */
 function AdminNotFound() {
   return (
@@ -103,6 +160,7 @@ export default function AdminApp() {
     error: sessionError,
     isRetrying,
     reload: reloadSession,
+    refresh: refreshSession,
     login,
     setup,
     logout,
@@ -118,14 +176,47 @@ export default function AdminApp() {
 
   const navItem = findNavItem(location.pathname)
   const isAuthenticated = session?.authenticated === true
+  /** Login yang sah tetapi role-nya bukan admin \u2192 tidak boleh masuk dashboard. */
+  const isAdmin = isAuthenticated && session?.role === ADMIN_ROLE
   const isLoginRoute = location.pathname === ADMIN_LOGIN_PATH
 
   useEffect(() => {
     const siteName = siteSetting(data?.settings, 'site.name')
-    document.title = navItem
-      ? `${navItem.title} — Admin ${siteName}`
+    const pageTitle = isAuthenticated && !isAdmin
+      ? 'Access Denied'
+      : navItem
+        ? navItem.title
+        : null
+    document.title = pageTitle
+      ? `${pageTitle} \u2014 Admin ${siteName}`
       : `Admin ${siteName}`
-  }, [data?.settings, navItem])
+  }, [data?.settings, isAdmin, isAuthenticated, navItem])
+
+  /**
+   * Logout: cabut sesi di server, lalu kembali ke layar login tanpa sisa
+   * parameter `next` dari halaman yang sedang dibuka.
+   */
+  const handleLogout = useCallback(async () => {
+    await logout()
+    navigate(ADMIN_LOGIN_PATH, { replace: true })
+  }, [logout])
+
+  /**
+   * Sesi punya masa berlaku. Selama dashboard dipakai, waktu kedaluwarsa
+   * diperiksa berkala ke server (sekaligus memperpanjang sesi aktif) sehingga
+   * sesi yang benar-benar habis langsung mengembalikan admin ke layar login.
+   */
+  useEffect(() => {
+    if (!isAdmin || !session?.expiresAt) return
+
+    const expiresAt = Date.parse(session.expiresAt)
+    if (!Number.isFinite(expiresAt)) return
+
+    const delay = Math.max(0, Math.min(expiresAt - Date.now(), 60_000))
+    const timer = window.setTimeout(() => void refreshSession(), delay)
+
+    return () => window.clearTimeout(timer)
+  }, [isAdmin, refreshSession, session?.expiresAt])
 
   /**
    * Setiap halaman /admin/* hanya boleh dibuka oleh admin yang sudah login.
@@ -145,12 +236,12 @@ export default function AdminApp() {
 
   /** Setelah login dari /admin/login, lanjutkan ke halaman yang tadi diminta. */
   useEffect(() => {
-    if (!isAuthenticated || !isLoginRoute) return
+    if (!isAdmin || !isLoginRoute) return
 
     const next = new URLSearchParams(location.search).get('next')
     const target = next && next.startsWith('/admin') ? next : ADMIN_BASE
     navigate(target, { replace: true })
-  }, [isAuthenticated, isLoginRoute, location.search])
+  }, [isAdmin, isLoginRoute, location.search])
 
   if (sessionStatus === 'loading') {
     return (
@@ -175,6 +266,18 @@ export default function AdminApp() {
     )
   }
 
+  // Login sah tapi bukan admin: tutup seluruh dashboard (server juga menolak
+  // setiap request tulis dari akun ini dengan status 403).
+  if (isAuthenticated && !isAdmin) {
+    return (
+      <AdminAccessDenied
+        email={session.email}
+        role={session.role}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
   // Tanpa sesi login: dashboard tidak pernah dirender, hanya layar login.
   if (!isAuthenticated) {
     return (
@@ -195,6 +298,8 @@ export default function AdminApp() {
         activePath={navItem?.path ?? location.pathname}
         open={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        onLogout={handleLogout}
+        markUrl={customMarkUrl(data?.settings)}
       />
 
       <div className="lg:pl-72">
@@ -205,7 +310,7 @@ export default function AdminApp() {
           initials={initialsOf(adminName)}
           email={session.email}
           onOpenSidebar={() => setIsSidebarOpen(true)}
-          onLogout={logout}
+          onLogout={handleLogout}
         />
 
         <main className="mx-auto w-full max-w-7xl px-5 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -260,17 +365,21 @@ export default function AdminApp() {
             ) : navItem.id === 'education' ? (
               <AdminEducation data={data} reload={reload} />
             ) : navItem.id === 'contact' ? (
-              <AdminCollectionPage
-                config={collectionConfigs.contacts}
-                data={data}
-                reload={reload}
-              />
+              <>
+                <AdminCollectionPage
+                  config={collectionConfigs.contacts}
+                  data={data}
+                  reload={reload}
+                />
+                {/* Pesan dari form Contact halaman publik. */}
+                <ContactInbox />
+              </>
             ) : (
               <AdminSettings
                 data={data}
                 reload={reload}
                 session={session}
-                onLogout={logout}
+                onLogout={handleLogout}
                 onLogoutAll={logoutAll}
                 onSessionChanged={reloadSession}
               />

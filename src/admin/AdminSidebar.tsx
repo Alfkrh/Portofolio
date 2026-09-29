@@ -6,24 +6,33 @@
  */
 
 import { useEffect } from 'react'
-import { ArrowUpRight, X } from 'lucide-react'
+import { ArrowUpRight, LogOut, X } from 'lucide-react'
 import { navigate } from '../lib/useLocation'
 import { cn } from '../lib/cn'
+import LogoMark from '../components/LogoMark'
 import type { AdminNavItem } from './adminConfig'
 
 interface SidebarContentProps {
   items: AdminNavItem[]
   activePath: string
   onNavigate: () => void
+  onLogout: () => void | Promise<void>
+  /** Logo dari Settings → Browser favicon; `null` = mark bawaan. */
+  markUrl: string | null
 }
 
-function SidebarContent({ items, activePath, onNavigate }: SidebarContentProps) {
+function SidebarContent({
+  items,
+  activePath,
+  onNavigate,
+  onLogout,
+  markUrl,
+}: SidebarContentProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600 font-display text-sm font-extrabold text-white shadow-soft">
-          AF
-        </span>
+        {/* Mark yang sama dengan favicon & navbar publik. */}
+        <LogoMark src={markUrl} className="h-9 w-9" />
         <span className="min-w-0">
           <span className="block truncate font-display text-sm font-extrabold text-white">
             Portfolio Admin
@@ -72,7 +81,7 @@ function SidebarContent({ items, activePath, onNavigate }: SidebarContentProps) 
         </ul>
       </nav>
 
-      <div className="shrink-0 border-t border-white/10 p-3">
+      <div className="shrink-0 space-y-1 border-t border-white/10 p-3">
         <a
           href="/"
           onClick={(event) => {
@@ -85,6 +94,19 @@ function SidebarContent({ items, activePath, onNavigate }: SidebarContentProps) 
           <ArrowUpRight aria-hidden="true" className="h-[18px] w-[18px] text-brand-300" />
           Lihat situs publik
         </a>
+
+        {/* Logout: mencabut sesi di server lalu kembali ke layar login. */}
+        <button
+          type="button"
+          onClick={() => {
+            void onLogout()
+            onNavigate()
+          }}
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition duration-200 ease-out hover:bg-red-500/15 hover:text-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
+        >
+          <LogOut aria-hidden="true" className="h-[18px] w-[18px] text-red-300" />
+          Logout
+        </button>
       </div>
     </div>
   )
@@ -95,6 +117,9 @@ interface AdminSidebarProps {
   activePath: string
   open: boolean
   onClose: () => void
+  onLogout: () => void | Promise<void>
+  /** Logo dari Settings → Browser favicon; `null` = mark bawaan. */
+  markUrl?: string | null
 }
 
 export default function AdminSidebar({
@@ -102,6 +127,8 @@ export default function AdminSidebar({
   activePath,
   open,
   onClose,
+  onLogout,
+  markUrl = null,
 }: AdminSidebarProps) {
   useEffect(() => {
     if (!open) return
@@ -122,6 +149,8 @@ export default function AdminSidebar({
           items={items}
           activePath={activePath}
           onNavigate={onClose}
+          onLogout={onLogout}
+          markUrl={markUrl}
         />
       </aside>
 
@@ -151,6 +180,8 @@ export default function AdminSidebar({
               items={items}
               activePath={activePath}
               onNavigate={onClose}
+              onLogout={onLogout}
+              markUrl={markUrl}
             />
           </div>
         </div>

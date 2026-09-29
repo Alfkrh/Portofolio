@@ -32,8 +32,9 @@ const iconSizeClasses: Record<IconTileSize, string> = {
 }
 
 const toneClasses: Record<IconTileTone, string> = {
-  soft: 'bg-brand-50 text-brand-600',
-  solid: 'bg-brand-600 text-white shadow-soft',
+  soft: 'bg-brand-50 text-brand-600 dark:bg-brand-900/60 dark:text-brand-300',
+  solid:
+    'bg-brand-600 text-white shadow-soft dark:bg-brand-400 dark:text-navy',
   onDark: 'border border-white/10 bg-white/5 text-brand-300',
 }
 

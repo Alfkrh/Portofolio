@@ -10,8 +10,10 @@ interface TagProps {
 }
 
 const toneClasses: Record<TagTone, string> = {
-  brand: 'border-brand-100 bg-brand-50/70 text-brand-700',
-  neutral: 'border-line bg-white text-slate-600',
+  brand:
+    'border-brand-100 bg-brand-50/70 text-brand-700 dark:border-brand-900/70 dark:bg-brand-900/40 dark:text-brand-300',
+  neutral:
+    'border-line bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300',
   dark: 'border-white/10 bg-white/5 text-slate-200',
 }
 

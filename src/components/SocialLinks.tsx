@@ -1,5 +1,6 @@
 import type { Contact } from '../types/portfolio'
 import SocialIcon from './ui/SocialIcon'
+import { contactHref, isExternalHref } from '../lib/contactLinks'
 import { cn } from '../lib/cn'
 
 interface SocialLinksProps {
@@ -33,7 +34,7 @@ export default function SocialLinks({
           showLabels ? 'h-10 px-3.5' : 'h-11 w-11 justify-center',
           isDark
             ? 'border-white/15 text-slate-200 hover:border-white/30 hover:bg-white/10'
-            : 'border-line bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700',
+            : 'border-line bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-brand-400/50 dark:hover:bg-slate-700 dark:hover:text-brand-300',
         )
 
         if (!contact.url) {
@@ -53,14 +54,19 @@ export default function SocialLinks({
           )
         }
 
-        const isExternal = contact.url.startsWith('http')
+        // Dashboard menyimpan tautan apa adanya; `contactHref` membetulkan
+        // kasus seperti email yang ditulis tanpa awalan `mailto:`.
+        const href = contactHref(contact.url)
+        const isExternal = isExternalHref(href)
 
         return (
           <li key={contact.id}>
             <a
-              href={contact.url}
+              href={href}
               target={isExternal ? '_blank' : undefined}
               rel={isExternal ? 'noreferrer' : undefined}
+              /* Mode ikon saja: nama kanal tetap terbaca lewat tooltip. */
+              title={showLabels ? undefined : (contact.value ?? label)}
               className={cn(baseClasses, 'motion-safe:hover:-translate-y-0.5')}
             >
               <SocialIcon kind={contact.kind} className="h-4 w-4" />

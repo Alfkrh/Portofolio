@@ -48,7 +48,7 @@ export default function Skills({ skills, sections }: SkillsProps) {
   }, [skills])
 
   return (
-    <Section id="skills" className="border-y border-line bg-white">
+    <Section id="skills" className="border-y border-line bg-white dark:border-slate-800 dark:bg-gray-900">
       <Container>
         <SectionHeading
           eyebrow={sectionText(sections, 'skills.eyebrow')}
@@ -57,7 +57,7 @@ export default function Skills({ skills, sections }: SkillsProps) {
         />
 
         {groups.length === 0 ? (
-          <div className="mt-12 rounded-card border border-dashed border-line bg-surface/60 p-8 text-center">
+          <div className="mt-12 rounded-card border border-dashed border-line bg-surface/60 p-8 text-center dark:border-slate-700 dark:bg-slate-800/60">
             <PlaceholderNote>Belum ada skill yang ditambahkan</PlaceholderNote>
           </div>
         ) : (
@@ -75,14 +75,14 @@ export default function Skills({ skills, sections }: SkillsProps) {
                     index < 3 ? 'lg:col-span-2' : 'lg:col-span-3',
                   )}
                 >
-                  <article className="flex h-full flex-col rounded-card border border-line bg-surface/60 p-6 transition duration-300 ease-out hover:border-brand-200 hover:bg-white hover:shadow-lift motion-safe:hover:-translate-y-1 sm:p-7">
+                  <article className="flex h-full flex-col rounded-card border border-line bg-surface/60 p-6 transition duration-300 ease-out hover:border-brand-200 hover:bg-white hover:shadow-lift dark:border-slate-700 dark:bg-slate-800 dark:hover:border-brand-400/40 dark:hover:bg-slate-700/70 motion-safe:hover:-translate-y-1 sm:p-7">
                     <IconTile icon={Icon} size="md" tone="solid" />
 
-                    <h3 className="mt-5 text-lg font-bold text-navy">
+                    <h3 className="mt-5 text-lg font-bold text-navy dark:text-slate-50">
                       {group.category}
                     </h3>
 
-                    <p className="mt-1 text-xs font-medium tracking-wide text-slate-400 uppercase">
+                    <p className="mt-1 text-xs font-medium tracking-wide text-slate-400 uppercase dark:text-slate-400">
                       {group.names.length} skills
                     </p>
 

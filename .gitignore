@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Konfigurasi rahasia (lihat .env.example)
+.env
+.env.*
+!.env.example
+
 # Data runtime portfolio (database SQLite + file upload)
 server/data
 

@@ -34,6 +34,20 @@ export const SITE_SETTING_DEFAULTS: Record<SiteSettingKey, string> = {
   'site.favicon_url': '/favicon.svg',
 }
 
+/**
+ * URL mark logo kustom dari pengaturan situs.
+ *
+ * `null` berarti pemilik website memakai mark bawaan (`/favicon.svg`), jadi
+ * komponen LogoMark menggambar mark SVG-nya sendiri alih-alih memuat gambar.
+ */
+export function customMarkUrl(
+  settings: SiteSettings | undefined,
+): string | null {
+  const url = settings?.['site.favicon_url']?.trim()
+  if (!url || url === SITE_SETTING_DEFAULTS['site.favicon_url']) return null
+  return url
+}
+
 /** Ambil nilai pengaturan dengan fallback ke nilai bawaan. */
 export function siteSetting(
   settings: SiteSettings | undefined,

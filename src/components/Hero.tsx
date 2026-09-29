@@ -30,38 +30,38 @@ export default function Hero({
     >
       {/* Dekorasi latar — non-interaktif. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-24 right-[-6rem] h-72 w-72 rounded-full bg-brand-100/70 blur-3xl" />
-        <div className="absolute top-40 left-[-8rem] h-64 w-64 rounded-full bg-brand-50 blur-3xl" />
+        <div className="absolute -top-24 right-[-6rem] h-72 w-72 rounded-full bg-brand-100/70 blur-3xl dark:bg-brand-500/20" />
+        <div className="absolute top-40 left-[-8rem] h-64 w-64 rounded-full bg-brand-50 blur-3xl dark:bg-brand-900/70" />
       </div>
 
       <Container>
         <div className="grid items-center gap-14 lg:grid-cols-2 lg:gap-16">
           <div className="max-w-xl">
             {profile.greeting ? (
-              <span className="inline-flex items-center gap-2 rounded-pill border border-brand-100 bg-white px-3.5 py-1.5 text-xs font-semibold tracking-[0.16em] text-brand-700 uppercase shadow-soft">
+              <span className="inline-flex items-center gap-2 rounded-pill border border-brand-100 bg-white px-3.5 py-1.5 text-xs font-semibold tracking-[0.16em] text-brand-700 uppercase shadow-soft dark:border-brand-900/70 dark:bg-slate-800 dark:text-brand-300">
                 <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
                 {profile.greeting}
               </span>
             ) : null}
 
-            <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-navy sm:text-5xl lg:text-6xl">
+            <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-navy dark:text-slate-50 sm:text-5xl lg:text-6xl">
               {profile.name}
             </h1>
 
             {profile.headline ? (
-              <p className="mt-4 font-display text-lg font-semibold text-brand-700 sm:text-xl">
+              <p className="mt-4 font-display text-lg font-semibold text-brand-700 dark:text-brand-400 sm:text-xl">
                 {profile.headline}
               </p>
             ) : null}
 
             {profile.short_description ? (
-              <p className="mt-6 text-base leading-relaxed text-slate-500 sm:text-lg">
+              <p className="mt-6 text-base leading-relaxed text-slate-500 dark:text-slate-400 sm:text-lg">
                 {profile.short_description}
               </p>
             ) : null}
 
             {profile.availability ? (
-              <p className="mt-6 inline-flex items-center gap-2 rounded-pill border border-emerald-100 bg-emerald-50/70 px-3.5 py-1.5 text-xs font-semibold text-emerald-700">
+              <p className="mt-6 inline-flex items-center gap-2 rounded-pill border border-emerald-100 bg-emerald-50/70 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-900/30 dark:text-emerald-300">
                 <BadgeCheck aria-hidden="true" className="h-3.5 w-3.5" />
                 {profile.availability}
               </p>
@@ -83,7 +83,7 @@ export default function Hero({
                 {contacts.length > 0 && focusAreas.length > 0 ? (
                   <span
                     aria-hidden="true"
-                    className="hidden h-6 w-px bg-line sm:block"
+                    className="hidden h-6 w-px bg-line sm:block dark:bg-slate-700"
                   />
                 ) : null}
 

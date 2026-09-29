@@ -21,6 +21,10 @@
  *   DELETE /api/profile/photo          → hapus foto profil
  *   GET    /api/sections               → teks section
  *   PUT    /api/sections               → ubah teks section
+ *   POST   /api/contact                → kirim pesan dari form Contact (publik)
+ *   GET    /api/contact-messages       → daftar pesan masuk (khusus admin)
+ *   PATCH  /api/contact-messages/:id   → tandai pesan sudah/belum dibaca
+ *   DELETE /api/contact-messages/:id   → hapus pesan
  *   GET    /api/uploads                → { url } hasil upload file gambar
  *   POST   /api/uploads                → upload file gambar (raw body)
  *   GET/POST           /api/:collection
@@ -30,8 +34,14 @@
  * Proteksi tulis: SETIAP request POST/PUT/PATCH/DELETE wajib menyertakan sesi
  * admin yang valid lewat header `Authorization: Bearer <token>`. Token didapat
  * dari `/api/auth/setup` atau `/api/auth/login` (password di-hash scrypt).
- * `PORTFOLIO_ADMIN_TOKEN` (bila di-set) tetap diterima sebagai kredensial
- * cadangan untuk skrip/otomasi.
+ * Pengecualiannya hanya form publik `POST /api/contact` (dibatasi rate limit)
+ * dan endpoint `/api/auth/*` yang punya aturannya sendiri.
+ *
+ * Otorisasi: selain terautentikasi, akun harus ber-role `admin`
+ * (`admin_users.role`). Login yang sah tapi ber-role lain ditolak dengan 403
+ * pada endpoint tulis, dan dashboard menampilkan halaman "Access Denied".
+ * `PORTFOLIO_ADMIN_TOKEN` (bila di-set di env) tetap diterima sebagai
+ * kredensial cadangan untuk skrip/otomasi dan diperlakukan sebagai role admin.
  */
 
 import { randomBytes } from 'node:crypto'
@@ -39,6 +49,15 @@ import { createReadStream, existsSync, statSync } from 'node:fs'
 import { unlink, writeFile } from 'node:fs/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { basename, extname, join, resolve } from 'node:path'
+import { ADMIN_ROLE } from '../src/config/authPolicy.ts'
+import {
+  CONTACT_EMAIL_MAX_LENGTH,
+  CONTACT_MAX_SUBMISSIONS,
+  CONTACT_MESSAGE_MAX_LENGTH,
+  CONTACT_MESSAGE_MIN_LENGTH,
+  CONTACT_NAME_MAX_LENGTH,
+  CONTACT_SUBMISSION_WINDOW_MS,
+} from '../src/config/contactPolicy.ts'
 import { isSiteSettingKey } from '../src/config/siteSettings.ts'
 import type { CollectionName } from '../src/types/portfolio.ts'
 import {
@@ -58,12 +77,15 @@ import {
 import {
   countAdminSessionsForUser,
   countAdminUsers,
+  countUnreadContactMessages,
   createAdminSession,
   createAdminUser,
   createCollectionItem,
+  createContactMessage,
   deleteAdminSession,
   deleteAdminSessionsForUser,
   deleteCollectionItem,
+  deleteContactMessage,
   findAdminSession,
   findAdminUserByEmail,
   findAdminUserById,
@@ -71,8 +93,10 @@ import {
   getPortfolio,
   getProfile,
   listCollection,
+  listContactMessages,
   listSections,
   listSettings,
+  setContactMessageRead,
   touchAdminSession,
   UPLOADS_DIR,
   updateAdminUserEmail,
@@ -173,6 +197,8 @@ interface AuthContext {
   mode: AuthMode
   userId: number | null
   email: string | null
+  /** Role akun yang login; `null` bila belum login. */
+  role: string | null
   expiresAt: string | null
   tokenHash: string | null
 }
@@ -182,8 +208,17 @@ const anonymousAuth: AuthContext = {
   mode: 'none',
   userId: null,
   email: null,
+  role: null,
   expiresAt: null,
   tokenHash: null,
+}
+
+/**
+ * `true` hanya untuk admin sungguhan. Login yang sah tapi ber-role lain
+ * (mis. `viewer`) tidak boleh menyentuh endpoint tulis maupun dashboard.
+ */
+function isAdminAuth(auth: AuthContext): boolean {
+  return auth.authenticated && auth.role === ADMIN_ROLE
 }
 
 /**
@@ -198,7 +233,12 @@ function authenticate(req: IncomingMessage): AuthContext {
 
   const envToken = process.env.PORTFOLIO_ADMIN_TOKEN
   if (envToken && token === envToken) {
-    return { ...anonymousAuth, authenticated: true, mode: 'env-token' }
+    return {
+      ...anonymousAuth,
+      authenticated: true,
+      mode: 'env-token',
+      role: ADMIN_ROLE,
+    }
   }
 
   const tokenHash = hashSessionToken(token)
@@ -219,6 +259,7 @@ function authenticate(req: IncomingMessage): AuthContext {
     mode: 'session',
     userId: user.id,
     email: user.email,
+    role: user.role,
     expiresAt,
     tokenHash,
   }
@@ -227,6 +268,43 @@ function authenticate(req: IncomingMessage): AuthContext {
 /** Alamat klien untuk pembatasan percobaan login. */
 function clientIp(req: IncomingMessage): string {
   return req.socket.remoteAddress ?? 'unknown'
+}
+
+/*
+ * Pembatas pengiriman form Contact (endpoint publik). Disimpan di memori
+ * proses: cukup untuk satu server portfolio, dan otomatis kembali kosong saat
+ * server di-restart.
+ */
+const contactSubmissions = new Map<string, number[]>()
+
+/**
+ * `true` bila IP ini sudah mengirim terlalu banyak pesan pada jendela waktu
+ * yang sedang berjalan. Kiriman yang diizinkan ikut dicatat di sini.
+ */
+function isContactSubmissionBlocked(ip: string): boolean {
+  const now = Date.now()
+  const recent = (contactSubmissions.get(ip) ?? []).filter(
+    (at) => now - at < CONTACT_SUBMISSION_WINDOW_MS,
+  )
+
+  if (recent.length >= CONTACT_MAX_SUBMISSIONS) {
+    contactSubmissions.set(ip, recent)
+    return true
+  }
+
+  recent.push(now)
+  contactSubmissions.set(ip, recent)
+
+  // Buang alamat yang jendelanya sudah lewat supaya map tidak tumbuh terus.
+  if (contactSubmissions.size > 500) {
+    for (const [key, timestamps] of contactSubmissions) {
+      if (timestamps.every((at) => now - at >= CONTACT_SUBMISSION_WINDOW_MS)) {
+        contactSubmissions.delete(key)
+      }
+    }
+  }
+
+  return false
 }
 
 /** Terbitkan sesi baru untuk sebuah akun lalu kembalikan token aslinya. */
@@ -388,12 +466,29 @@ export async function handleApiRequest(
   const auth = authenticate(req)
   /** Endpoint auth memakai aturan sendiri di dalam handler-nya. */
   const isAuthEndpoint = resource === 'auth'
+  /**
+   * Satu-satunya endpoint tulis yang boleh diakses tanpa login: kirim pesan
+   * dari form Contact di halaman publik (dibatasi rate limit per IP).
+   */
+  const isContactSubmit =
+    resource === 'contact' && !param && method === 'POST'
 
-  if (isWrite && !isAuthEndpoint && !auth.authenticated) {
+  if (isWrite && !isAuthEndpoint && !isContactSubmit && !auth.authenticated) {
     sendError(
       res,
       401,
       'Sesi admin tidak valid atau sudah berakhir. Silakan login kembali.',
+    )
+    return true
+  }
+
+  // Login yang sah tapi bukan role admin: tolak, jangan perlakukan sebagai
+  // tamu — supaya jelas bahwa kredensialnya benar namun tidak punya akses.
+  if (isWrite && !isAuthEndpoint && !isContactSubmit && !isAdminAuth(auth)) {
+    sendError(
+      res,
+      403,
+      'Akses ditolak. Akun ini tidak memiliki role admin.',
     )
     return true
   }
@@ -469,7 +564,7 @@ export async function handleApiRequest(
 
     // POST /api/auth/logout-all — cabut semua sesi akun ini.
     if (resource === 'auth' && param === 'logout-all' && method === 'POST') {
-      if (auth.mode !== 'session' || auth.userId === null) {
+      if (auth.mode !== 'session' || auth.userId === null || !isAdminAuth(auth)) {
         sendError(res, 401, 'Perlu login akun admin untuk mengakhiri semua sesi.')
         return true
       }
@@ -481,7 +576,7 @@ export async function handleApiRequest(
 
     // POST /api/auth/password — ganti password (wajib password lama).
     if (resource === 'auth' && param === 'password' && method === 'POST') {
-      if (auth.mode !== 'session' || auth.userId === null) {
+      if (auth.mode !== 'session' || auth.userId === null || !isAdminAuth(auth)) {
         sendError(res, 401, 'Perlu login akun admin untuk mengganti password.')
         return true
       }
@@ -526,7 +621,7 @@ export async function handleApiRequest(
 
     // POST /api/auth/email — ganti email admin (wajib password).
     if (resource === 'auth' && param === 'email' && method === 'POST') {
-      if (auth.mode !== 'session' || auth.userId === null) {
+      if (auth.mode !== 'session' || auth.userId === null || !isAdminAuth(auth)) {
         sendError(res, 401, 'Perlu login akun admin untuk mengganti email.')
         return true
       }
@@ -566,6 +661,7 @@ export async function handleApiRequest(
         setupRequired: countAdminUsers() === 0,
         authenticated: auth.authenticated,
         email: auth.email,
+        role: auth.role,
         expiresAt: auth.expiresAt,
         authMode: auth.mode,
         activeSessions:
@@ -580,6 +676,127 @@ export async function handleApiRequest(
     if (resource === 'portfolio' && method === 'GET') {
       sendJson(res, 200, getPortfolio())
       return true
+    }
+
+    // POST /api/contact — form Contact halaman publik (tanpa login).
+    if (resource === 'contact' && !param && method === 'POST') {
+      if (isContactSubmissionBlocked(clientIp(req))) {
+        sendError(
+          res,
+          429,
+          'Terlalu banyak pesan dikirim dari jaringan ini. Coba lagi beberapa menit lagi.',
+        )
+        return true
+      }
+
+      const body = await readJsonBody(req)
+      const name = typeof body.name === 'string' ? body.name.trim() : ''
+      const email = typeof body.email === 'string' ? body.email.trim() : ''
+      const message =
+        typeof body.message === 'string' ? body.message.trim() : ''
+
+      if (!name) {
+        sendError(res, 400, 'Nama wajib diisi.')
+        return true
+      }
+      if (name.length > CONTACT_NAME_MAX_LENGTH) {
+        sendError(
+          res,
+          400,
+          `Nama maksimal ${CONTACT_NAME_MAX_LENGTH} karakter.`,
+        )
+        return true
+      }
+      if (!email || email.length > CONTACT_EMAIL_MAX_LENGTH) {
+        sendError(res, 400, 'Format email belum benar.')
+        return true
+      }
+      if (!isValidEmail(email)) {
+        sendError(res, 400, 'Format email belum benar.')
+        return true
+      }
+      if (message.length < CONTACT_MESSAGE_MIN_LENGTH) {
+        sendError(
+          res,
+          400,
+          `Pesan minimal ${CONTACT_MESSAGE_MIN_LENGTH} karakter.`,
+        )
+        return true
+      }
+      if (message.length > CONTACT_MESSAGE_MAX_LENGTH) {
+        sendError(
+          res,
+          400,
+          `Pesan maksimal ${CONTACT_MESSAGE_MAX_LENGTH} karakter.`,
+        )
+        return true
+      }
+
+      const created = createContactMessage({ name, email, message })
+      sendJson(res, 201, {
+        success: true,
+        id: created.id,
+        created_at: created.created_at,
+      })
+      return true
+    }
+
+    // /api/contact-messages — inbox pesan masuk (khusus admin).
+    if (resource === 'contact-messages') {
+      if (!isAdminAuth(auth)) {
+        if (auth.authenticated) {
+          sendError(
+            res,
+            403,
+            'Akses ditolak. Akun ini tidak memiliki role admin.',
+          )
+        } else {
+          sendError(res, 401, 'Perlu login admin untuk membuka pesan masuk.')
+        }
+        return true
+      }
+
+      if (!param && method === 'GET') {
+        sendJson(res, 200, {
+          messages: listContactMessages(),
+          unread: countUnreadContactMessages(),
+        })
+        return true
+      }
+
+      const id = Number(param)
+      if (!param || !Number.isFinite(id)) {
+        sendError(res, 404, `Endpoint ${method} ${pathname} tidak ditemukan.`)
+        return true
+      }
+
+      if (method === 'PATCH') {
+        const body = await readJsonBody(req)
+        if (typeof body.is_read !== 'boolean') {
+          sendError(res, 400, 'Field is_read harus berupa boolean.')
+          return true
+        }
+
+        const updated = setContactMessageRead(id, body.is_read)
+        if (!updated) {
+          sendError(res, 404, 'Pesan tidak ditemukan.')
+          return true
+        }
+
+        sendJson(res, 200, updated)
+        return true
+      }
+
+      if (method === 'DELETE') {
+        const deleted = deleteContactMessage(id)
+        if (!deleted) {
+          sendError(res, 404, 'Pesan tidak ditemukan.')
+          return true
+        }
+
+        sendJson(res, 200, { success: true, id })
+        return true
+      }
     }
 
     // GET/PUT /api/settings — pengaturan situs (nama, judul, favicon).

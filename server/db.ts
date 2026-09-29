@@ -9,6 +9,7 @@
 import { mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
+import { ADMIN_ROLE } from '../src/config/authPolicy.ts'
 import {
   SITE_SETTING_DEFAULTS,
   SITE_SETTING_KEYS,
@@ -17,6 +18,7 @@ import type {
   CollectionItemMap,
   CollectionName,
   Contact,
+  ContactMessage,
   Education,
   Experience,
   PortfolioData,
@@ -33,6 +35,8 @@ import { seedData } from './seed.ts'
 export interface AdminUser {
   id: number
   email: string
+  /** `admin` = boleh membuka dashboard; nilai lain = read-only / ditolak. */
+  role: string
 }
 
 /** Sesi admin yang tersimpan — token asli tidak pernah disimpan. */
@@ -208,6 +212,7 @@ function createSchema(db: DatabaseSync) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'admin',
       created_at TEXT,
       updated_at TEXT
     );
@@ -250,6 +255,16 @@ function createSchema(db: DatabaseSync) {
     CREATE TABLE IF NOT EXISTS sections (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
+    );
+
+    /* Pesan dari form Contact di halaman publik (dibaca di dashboard admin). */
+    CREATE TABLE IF NOT EXISTS contact_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      message TEXT NOT NULL,
+      is_read INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT
     );
   `)
 }
@@ -390,6 +405,14 @@ function seedProjectFiltersIfEmpty(db: DatabaseSync) {
 }
 
 /**
+ * Teks catatan form Contact versi lama — form itu masih demo waktu itu.
+ * Sekarang pesannya benar-benar disimpan, jadi teks ini hanya diganti bila
+ * pemilik website belum pernah menyuntingnya sendiri.
+ */
+const LEGACY_CONTACT_FORM_NOTE =
+  'Form ini masih demo (belum terhubung ke backend). Hubungkan ke API/database pada tahap berikutnya.'
+
+/**
  * Upgrade ringan untuk database yang dibuat versi sebelumnya: menambahkan
  * kolom `projects` yang belum ada. Kolom `tags` (versi lama) juga diisi tag
  * bawaan pada baris yang masih kosong, jadi data manual tidak tertimpa.
@@ -426,6 +449,30 @@ function migrateSchema(db: DatabaseSync) {
   if (!hasColumn('published')) {
     db.exec('ALTER TABLE projects ADD COLUMN published INTEGER NOT NULL DEFAULT 1')
   }
+
+  // Kolom `role` pada akun admin: database lama dianggap berisi admin semua
+  // supaya akun yang sudah ada tidak mendadak kehilangan akses.
+  const adminColumns = db.prepare('PRAGMA table_info(admin_users)').all() as Array<{
+    name?: unknown
+  }>
+  const hasAdminColumn = (name: string) =>
+    adminColumns.some((column) => String(column.name) === name)
+
+  if (!hasAdminColumn('role')) {
+    db.exec(
+      `ALTER TABLE admin_users ADD COLUMN role TEXT NOT NULL DEFAULT '${ADMIN_ROLE}'`,
+    )
+  }
+
+  // Catatan di bawah form Contact: ganti teks "masih demo" dengan teks baru
+  // karena form-nya sudah tersimpan ke tabel `contact_messages`.
+  db.prepare(
+    'UPDATE sections SET value = ? WHERE key = ? AND value = ?',
+  ).run(
+    seedData.sections['contact.form_note'],
+    'contact.form_note',
+    LEGACY_CONTACT_FORM_NOTE,
+  )
 }
 
 /** Isi pengaturan bawaan saat tabel `settings` masih kosong. */
@@ -692,7 +739,13 @@ export function countAdminUsers(): number {
 }
 
 function toAdminUser(row: DbRow): AdminUser {
-  return { id: toNumber(row.id), email: String(row.email ?? '') }
+  const role = String(row.role ?? '').trim().toLowerCase()
+
+  return {
+    id: toNumber(row.id),
+    email: String(row.email ?? ''),
+    role: role.length > 0 ? role : ADMIN_ROLE,
+  }
 }
 
 export function createAdminUser(
@@ -707,7 +760,11 @@ export function createAdminUser(
     )
     .run(email.trim().toLowerCase(), passwordHash, now, now)
 
-  return { id: Number(result.lastInsertRowid), email: email.trim().toLowerCase() }
+  return {
+    id: Number(result.lastInsertRowid),
+    email: email.trim().toLowerCase(),
+    role: ADMIN_ROLE,
+  }
 }
 
 /** Cari akun admin (dengan hash password) untuk proses login. */
@@ -965,4 +1022,83 @@ export function updateSections(texts: Record<string, unknown>): void {
   for (const [key, value] of Object.entries(texts)) {
     if (typeof value === 'string') updateSection(key, value)
   }
+}
+
+/* ----------------------------- contact messages --------------------------- */
+
+function toContactMessage(row: DbRow): ContactMessage {
+  return {
+    id: toNumber(row.id),
+    name: String(row.name ?? ''),
+    email: String(row.email ?? ''),
+    message: String(row.message ?? ''),
+    is_read: Number(row.is_read ?? 0) === 1,
+    created_at: (row.created_at as string | null) ?? null,
+  }
+}
+
+/** Simpan satu pesan dari form Contact halaman publik. */
+export function createContactMessage(input: {
+  name: string
+  email: string
+  message: string
+}): ContactMessage {
+  const result = getDatabase()
+    .prepare(
+      `INSERT INTO contact_messages (name, email, message, is_read, created_at)
+       VALUES (?, ?, ?, 0, ?)`,
+    )
+    .run(input.name, input.email, input.message, new Date().toISOString())
+
+  const created = findContactMessage(Number(result.lastInsertRowid))
+  if (!created) throw new Error('Pesan gagal dibaca setelah disimpan.')
+  return created
+}
+
+export function findContactMessage(id: number): ContactMessage | null {
+  const row = getDatabase()
+    .prepare('SELECT * FROM contact_messages WHERE id = ?')
+    .get(id) as DbRow | undefined
+
+  return row ? toContactMessage(row) : null
+}
+
+/** Pesan terbaru lebih dulu — dibatasi agar respons API tetap ringan. */
+export function listContactMessages(limit = 200): ContactMessage[] {
+  const rows = getDatabase()
+    .prepare(
+      'SELECT * FROM contact_messages ORDER BY datetime(created_at) DESC, id DESC LIMIT ?',
+    )
+    .all(limit) as DbRow[]
+
+  return rows.map(toContactMessage)
+}
+
+/** Tandai pesan sudah/belum dibaca. */
+export function setContactMessageRead(
+  id: number,
+  isRead: boolean,
+): ContactMessage | null {
+  getDatabase()
+    .prepare('UPDATE contact_messages SET is_read = ? WHERE id = ?')
+    .run(isRead ? 1 : 0, id)
+
+  return findContactMessage(id)
+}
+
+export function deleteContactMessage(id: number): boolean {
+  const result = getDatabase()
+    .prepare('DELETE FROM contact_messages WHERE id = ?')
+    .run(id)
+
+  return Number(result.changes) > 0
+}
+
+/** Jumlah pesan yang belum dibaca (untuk lencana di dashboard). */
+export function countUnreadContactMessages(): number {
+  const row = getDatabase()
+    .prepare('SELECT COUNT(*) AS total FROM contact_messages WHERE is_read = 0')
+    .get() as { total?: unknown } | undefined
+
+  return Number(row?.total ?? 0)
 }

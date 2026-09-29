@@ -65,7 +65,7 @@ export default function PhotoLightbox({
           type="button"
           onClick={onClose}
           aria-label="Tutup preview foto"
-          className="absolute -top-3 -right-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-navy shadow-lift transition duration-200 hover:-translate-y-0.5 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+          className="absolute -top-3 -right-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-navy shadow-lift transition duration-200 hover:-translate-y-0.5 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-brand-300 dark:focus-visible:ring-offset-slate-900"
         >
           <X aria-hidden="true" className="h-5 w-5" />
         </button>

@@ -32,14 +32,14 @@ export default function SectionHeading({
         <span
           className={cn(
             'inline-flex items-center gap-2.5 text-xs font-semibold tracking-[0.18em] uppercase',
-            isDark ? 'text-brand-300' : 'text-brand-600',
+            isDark ? 'text-brand-300' : 'text-brand-600 dark:text-brand-400',
           )}
         >
           <span
             aria-hidden="true"
             className={cn(
               'h-px w-6',
-              isDark ? 'bg-brand-300/60' : 'bg-brand-600/50',
+              isDark ? 'bg-brand-300/60' : 'bg-brand-600/50 dark:bg-brand-400/60',
             )}
           />
           {eyebrow}
@@ -59,7 +59,7 @@ export default function SectionHeading({
         <p
           className={cn(
             'mt-4 text-base leading-relaxed',
-            isDark ? 'text-slate-300' : 'text-slate-500',
+            isDark ? 'text-slate-300' : 'text-slate-500 dark:text-slate-400',
           )}
         >
           {subtitle}

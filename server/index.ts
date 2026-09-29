@@ -8,7 +8,11 @@
  *   HOST                     host bind (default 127.0.0.1)
  *   PORTFOLIO_DATA_DIR       folder data (database + uploads)
  *   PORTFOLIO_DB_PATH        path file SQLite
- *   PORTFOLIO_ADMIN_TOKEN    token untuk endpoint tulis (Bearer)
+ *   PORTFOLIO_ADMIN_TOKEN    kredensial cadangan untuk endpoint tulis (Bearer),
+ *                            diperlakukan sebagai role admin
+ *
+ * Nilai-nilai itu bisa ditaruh di file `.env` (lihat `.env.example`): `npm start`
+ * membacanya lewat `node --env-file-if-exists=.env`.
  */
 
 import { createReadStream, existsSync, statSync } from 'node:fs'

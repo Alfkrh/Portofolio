@@ -11,6 +11,7 @@ import ProfileNotConfigured from './components/ProfileNotConfigured'
 import Projects from './components/Projects'
 import Skills from './components/Skills'
 import { navItems, sectionText } from './config/siteCopy'
+import { customMarkUrl } from './config/siteSettings'
 import { usePortfolio } from './hooks/usePortfolio'
 import { useSiteMeta } from './hooks/useSiteMeta'
 
@@ -68,9 +69,11 @@ export default function App() {
   }
 
   const sections = data.sections
+  // Logo yang diunggah lewat Settings dipakai untuk mark di navbar.
+  const markUrl = customMarkUrl(data.settings)
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface dark:bg-slate-900">
       <a
         href="#home"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:inline-flex focus:h-10 focus:items-center focus:rounded-pill focus:bg-brand-600 focus:px-4 focus:text-sm focus:font-semibold focus:text-white"
@@ -83,6 +86,7 @@ export default function App() {
         logo={profile.logo}
         name={profile.name}
         ctaLabel={sectionText(sections, 'nav.cta_label')}
+        markUrl={markUrl}
       />
 
       <main>

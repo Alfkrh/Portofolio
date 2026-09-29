@@ -23,7 +23,7 @@ export default function PlaceholderNote({
         'inline-flex items-center gap-2 rounded-pill border border-dashed px-3 py-1 text-xs font-medium',
         tone === 'dark'
           ? 'border-white/20 text-slate-300'
-          : 'border-line text-slate-400',
+          : 'border-line text-slate-400 dark:border-slate-700 dark:text-slate-400',
         className,
       )}
     >

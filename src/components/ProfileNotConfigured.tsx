@@ -14,21 +14,21 @@ export default function ProfileNotConfigured({
   onReload,
 }: ProfileNotConfiguredProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-5 py-24">
+    <div className="flex min-h-screen items-center justify-center bg-surface px-5 py-24 dark:bg-slate-900">
       <Container className="max-w-lg">
-        <div className="rounded-card border border-line bg-white p-8 text-center shadow-soft">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+        <div className="rounded-card border border-line bg-white p-8 text-center shadow-soft dark:border-slate-700 dark:bg-slate-800">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-900/60 dark:text-brand-300">
             <DatabaseZap aria-hidden="true" className="h-6 w-6" />
           </span>
 
-          <h1 className="mt-5 text-xl font-bold text-navy">
+          <h1 className="mt-5 text-xl font-bold text-navy dark:text-slate-50">
             Database portfolio masih kosong
           </h1>
 
-          <p className="mt-3 text-sm leading-relaxed text-slate-500">
+          <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
             API berjalan, tetapi belum ada data profil. Jalankan ulang server
             untuk mengisi konten awal, atau kirim data lewat
-            <span className="font-semibold text-slate-600">
+            <span className="font-semibold text-slate-600 dark:text-slate-300">
               {' '}
               PUT /api/profile
             </span>

@@ -8,7 +8,7 @@ function SkeletonBlock({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={cn('bg-line/70 motion-safe:animate-pulse', className)}
+      className={cn('bg-line/70 motion-safe:animate-pulse dark:bg-slate-700', className)}
     />
   )
 }
@@ -20,11 +20,11 @@ function SkeletonBlock({ className }: { className?: string }) {
  */
 export function PortfolioLoading() {
   return (
-    <div className="min-h-screen bg-surface" role="status" aria-live="polite">
+    <div className="min-h-screen bg-surface dark:bg-slate-900" role="status" aria-live="polite">
       <span className="sr-only">Memuat konten portfolio…</span>
 
       {/* Navbar */}
-      <div className="border-b border-line bg-white/70">
+      <div className="border-b border-line bg-white/70 dark:border-slate-800 dark:bg-slate-800/70">
         <Container>
           <div className="flex h-16 items-center justify-between gap-4">
             <SkeletonBlock className="h-6 w-20 rounded-lg" />
@@ -68,7 +68,7 @@ export function PortfolioLoading() {
       </div>
 
       {/* Section dengan band (mirip section Projects) */}
-      <div className="border-y border-brand-100/70 bg-brand-50/50 py-20 lg:py-32">
+      <div className="border-y border-brand-100/70 bg-brand-50/50 py-20 dark:border-brand-900/60 dark:bg-brand-900/30 lg:py-32">
         <Container>
           <div className="space-y-4">
             <SkeletonBlock className="h-4 w-28 rounded" />
@@ -80,7 +80,7 @@ export function PortfolioLoading() {
             {[0, 1, 2].map((index) => (
               <div
                 key={index}
-                className="overflow-hidden rounded-card border border-line bg-white"
+                className="overflow-hidden rounded-card border border-line bg-white dark:border-slate-700 dark:bg-slate-800"
               >
                 <SkeletonBlock className="aspect-[4/3] w-full" />
                 <div className="space-y-3 p-5 sm:p-7">
@@ -111,28 +111,28 @@ export function PortfolioError({
   isRetrying = false,
 }: PortfolioErrorProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-5 py-24">
+    <div className="flex min-h-screen items-center justify-center bg-surface px-5 py-24 dark:bg-slate-900">
       <Container className="max-w-lg">
-        <div className="rounded-card border border-line bg-white p-6 text-center shadow-soft sm:p-8">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+        <div className="rounded-card border border-line bg-white p-6 text-center shadow-soft dark:border-slate-700 dark:bg-slate-800 sm:p-8">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-500 dark:bg-red-500/15 dark:text-red-400">
             <TriangleAlert aria-hidden="true" className="h-6 w-6" />
           </span>
 
-          <h1 className="mt-5 text-xl font-bold text-navy">
+          <h1 className="mt-5 text-xl font-bold text-navy dark:text-slate-50">
             Konten portfolio gagal dimuat
           </h1>
 
-          <p className="mt-3 text-sm leading-relaxed text-slate-500">
+          <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
             {message}
           </p>
 
-          <p className="mt-4 rounded-xl bg-surface p-3 text-left text-xs leading-relaxed text-slate-400">
+          <p className="mt-4 rounded-xl bg-surface p-3 text-left text-xs leading-relaxed text-slate-400 dark:bg-slate-900/60 dark:text-slate-400">
             Pastikan backend berjalan. Di mode pengembangan cukup jalankan
-            <span className="font-semibold text-slate-500"> npm run dev</span>
+            <span className="font-semibold text-slate-500 dark:text-slate-400"> npm run dev</span>
             ; di produksi jalankan
-            <span className="font-semibold text-slate-500"> npm run start</span>{' '}
+            <span className="font-semibold text-slate-500 dark:text-slate-400"> npm run start</span>{' '}
             setelah
-            <span className="font-semibold text-slate-500"> npm run build</span>.
+            <span className="font-semibold text-slate-500 dark:text-slate-400"> npm run build</span>.
           </p>
 
           <Button

@@ -10,6 +10,31 @@
     />
     <meta name="author" content="Alif Fikri" />
     <meta name="theme-color" content="#2563EB" />
+    <!-- Terapkan tema sebelum paint pertama supaya tidak ada kedipan mode.
+         Nilai & aturannya sama dengan src/services/themeStore.ts. -->
+    <script>
+      ;(function () {
+        try {
+          var root = document.documentElement
+          var pref = localStorage.getItem('portfolio-theme')
+          var dark = pref === 'dark'
+          if (pref !== 'light' && pref !== 'dark') {
+            dark =
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches
+          }
+          // Dark mode hanya untuk halaman publik; /admin tetap light.
+          var isPublic =
+            location.pathname !== '/admin' &&
+            location.pathname.indexOf('/admin/') !== 0
+          var on = Boolean(dark && isPublic)
+          root.classList.toggle('dark', on)
+          root.style.colorScheme = on ? 'dark' : 'light'
+        } catch (e) {
+          /* localStorage/media query tidak tersedia → biarkan default light */
+        }
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

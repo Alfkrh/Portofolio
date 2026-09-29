@@ -11,6 +11,7 @@
 import type {
   CollectionItemMap,
   CollectionName,
+  ContactMessage,
   PortfolioData,
   Profile,
 } from '../types/portfolio'
@@ -141,6 +142,63 @@ export type CollectionPayload<K extends CollectionName> = Partial<
   Omit<CollectionItemMap[K], 'id'>
 >
 
+/* ------------------------------- contact form ------------------------------ */
+
+/**
+ * Kirim pesan dari form Contact halaman publik. Satu-satunya endpoint tulis
+ * yang tidak memerlukan login — server tetap membatasi jumlah kiriman per IP.
+ */
+export function sendContactMessage(input: {
+  name: string
+  email: string
+  message: string
+}): Promise<{ success: boolean; id: number; created_at: string | null }> {
+  return request<{ success: boolean; id: number; created_at: string | null }>(
+    '/contact',
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(input),
+    },
+  )
+}
+
+/* ---------------------------- contact messages ----------------------------- */
+
+/** Hasil pembacaan inbox: daftar pesan + jumlah yang belum dibaca. */
+export interface ContactMessagesResult {
+  messages: ContactMessage[]
+  unread: number
+}
+
+/** Daftar pesan masuk (khusus admin). */
+export function fetchContactMessages(
+  signal?: AbortSignal,
+): Promise<ContactMessagesResult> {
+  return request<ContactMessagesResult>('/contact-messages', { signal })
+}
+
+/** Tandai satu pesan sudah/belum dibaca. */
+export function setContactMessageRead(
+  id: number,
+  isRead: boolean,
+): Promise<ContactMessage> {
+  return request<ContactMessage>(`/contact-messages/${id}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ is_read: isRead }),
+  })
+}
+
+/** Hapus satu pesan masuk. */
+export function deleteContactMessage(
+  id: number,
+): Promise<{ success: boolean; id: number }> {
+  return request<{ success: boolean; id: number }>(`/contact-messages/${id}`, {
+    method: 'DELETE',
+  })
+}
+
 /* ------------------------------ admin session ----------------------------- */
 
 /** Status login admin, dipakai dashboard sebagai gerbang akses. */
@@ -150,6 +208,11 @@ export interface AdminSession {
   /** `true` bila request ini membawa sesi login (atau token env) yang valid. */
   authenticated: boolean
   email: string | null
+  /**
+   * Role akun yang login. Hanya `'admin'` yang boleh membuka dashboard; akun
+   * terautentikasi dengan role lain ditolak dengan halaman Access Denied.
+   */
+  role: string | null
   expiresAt: string | null
   authMode: 'session' | 'env-token' | 'none'
   /** Jumlah sesi aktif akun ini (hanya diisi saat login memakai akun). */

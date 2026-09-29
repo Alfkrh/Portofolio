@@ -6,6 +6,8 @@ import { useScrolled } from '../hooks/useScrolled'
 import { anchors } from '../config/siteCopy'
 import Button from './ui/Button'
 import Container from './ui/Container'
+import LogoMark from './LogoMark'
+import ThemeToggle from './ThemeToggle'
 import { cn } from '../lib/cn'
 
 interface NavItem {
@@ -19,9 +21,17 @@ interface NavbarProps {
   logo: string | null
   name: string
   ctaLabel: string
+  /** Logo yang diunggah dari Settings; `null` = pakai mark bawaan. */
+  markUrl?: string | null
 }
 
-export default function Navbar({ items, logo, name, ctaLabel }: NavbarProps) {
+export default function Navbar({
+  items,
+  logo,
+  name,
+  ctaLabel,
+  markUrl = null,
+}: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const scrolled = useScrolled(12)
 
@@ -54,8 +64,8 @@ export default function Navbar({ items, logo, name, ctaLabel }: NavbarProps) {
       className={cn(
         'fixed inset-x-0 top-0 z-50 transition duration-300 ease-out',
         scrolled || isMenuOpen
-          ? 'border-b border-line/80 bg-white/85 shadow-soft backdrop-blur-md'
-          : 'border-b border-transparent bg-white/60 backdrop-blur-sm',
+          ? 'border-b border-line/80 bg-white/85 shadow-soft backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/90'
+          : 'border-b border-transparent bg-white/60 backdrop-blur-sm dark:bg-slate-900/60',
       )}
     >
       <Container>
@@ -63,10 +73,14 @@ export default function Navbar({ items, logo, name, ctaLabel }: NavbarProps) {
           <a
             href="#home"
             onClick={() => setIsMenuOpen(false)}
-            className="font-display text-xl font-extrabold tracking-tight text-navy transition hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-4 rounded-sm"
+            className="inline-flex items-center gap-2.5 rounded-sm font-display text-xl font-extrabold tracking-tight text-navy transition hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-4 dark:text-slate-50 dark:hover:text-brand-400 dark:focus-visible:ring-offset-slate-900"
           >
-            {rawLogo}
-            <span className="text-brand-600">.</span>
+            {/* Ukuran bawaan mark: 32px — sama tinggi dengan baris navbar. */}
+            <LogoMark src={markUrl} />
+            <span>
+              {rawLogo}
+              <span className="text-brand-600 dark:text-brand-400">.</span>
+            </span>
             <span className="sr-only"> — {name}</span>
           </a>
 
@@ -83,15 +97,15 @@ export default function Navbar({ items, logo, name, ctaLabel }: NavbarProps) {
                       className={cn(
                         'relative rounded-pill px-3.5 py-2 text-sm font-medium transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2',
                         isActive
-                          ? 'text-brand-700'
-                          : 'text-slate-600 hover:text-brand-700',
+                          ? 'text-brand-700 dark:text-brand-400'
+                          : 'text-slate-600 hover:text-brand-700 dark:text-slate-400 dark:hover:text-brand-400',
                       )}
                     >
                       {item.label}
                       <span
                         aria-hidden="true"
                         className={cn(
-                          'absolute inset-x-3.5 -bottom-px h-0.5 rounded-pill bg-brand-600 transition duration-300 ease-out',
+                          'absolute inset-x-3.5 -bottom-px h-0.5 rounded-pill bg-brand-600 transition duration-300 ease-out dark:bg-brand-400',
                           isActive
                             ? 'scale-x-100 opacity-100'
                             : 'scale-x-0 opacity-0',
@@ -105,6 +119,9 @@ export default function Navbar({ items, logo, name, ctaLabel }: NavbarProps) {
           </nav>
 
           <div className="flex items-center gap-2">
+            {/* Ganti Light / Dark Mode — pilihan disimpan di localStorage. */}
+            <ThemeToggle />
+
             <Button
               href={anchors.contact}
               size="sm"
@@ -122,7 +139,7 @@ export default function Navbar({ items, logo, name, ctaLabel }: NavbarProps) {
               aria-expanded={isMenuOpen}
               aria-controls="mobile-menu"
               aria-label={isMenuOpen ? 'Tutup menu' : 'Buka menu'}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-white text-navy transition duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-white text-navy transition duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-brand-400/50 dark:hover:bg-slate-700 dark:hover:text-brand-300 dark:focus-visible:ring-offset-slate-900 lg:hidden"
             >
               {isMenuOpen ? (
                 <X aria-hidden="true" className="h-5 w-5" />
@@ -138,7 +155,7 @@ export default function Navbar({ items, logo, name, ctaLabel }: NavbarProps) {
       <div
         id="mobile-menu"
         hidden={!isMenuOpen}
-        className="border-t border-line bg-white shadow-soft lg:hidden"
+        className="border-t border-line bg-white shadow-soft dark:border-slate-800 dark:bg-slate-900 lg:hidden"
       >
         <Container className="py-4">
           <nav aria-label="Navigasi mobile">
@@ -155,8 +172,8 @@ export default function Navbar({ items, logo, name, ctaLabel }: NavbarProps) {
                       className={cn(
                         'block rounded-xl px-3.5 py-3 text-sm font-medium transition duration-200',
                         isActive
-                          ? 'bg-brand-50 text-brand-700'
-                          : 'text-slate-600 hover:bg-surface hover:text-brand-700',
+                          ? 'bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-400'
+                          : 'text-slate-600 hover:bg-surface hover:text-brand-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-brand-400',
                       )}
                     >
                       {item.label}

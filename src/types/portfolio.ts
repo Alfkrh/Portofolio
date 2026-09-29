@@ -124,6 +124,18 @@ export interface Contact {
   sort_order: number
 }
 
+/** Pesan yang dikirim pengunjung lewat form Contact di halaman publik. */
+export interface ContactMessage {
+  id: number
+  name: string
+  email: string
+  message: string
+  /** `true` = sudah dibaca di dashboard admin. */
+  is_read: boolean
+  /** Waktu kirim (ISO string). */
+  created_at: string | null
+}
+
 /**
  * Teks section (judul, eyebrow, subtitle, label CTA) disimpan di tabel
  * `sections` supaya bisa diubah tanpa menyentuh kode.

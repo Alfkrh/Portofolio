@@ -49,10 +49,10 @@ function PhotoActionButton({
       aria-label={label}
       aria-describedby={describedBy}
       className={cn(
-        'inline-flex h-9 w-9 items-center justify-center rounded-xl border bg-white/90 shadow-soft backdrop-blur-sm transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 motion-safe:hover:-translate-y-0.5',
+        'inline-flex h-9 w-9 items-center justify-center rounded-xl border bg-white/90 shadow-soft backdrop-blur-sm transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-800/90 dark:focus-visible:ring-offset-slate-900 motion-safe:hover:-translate-y-0.5',
         tone === 'danger'
-          ? 'border-line text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600'
-          : 'border-line text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700',
+          ? 'border-line text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-red-500/40 dark:hover:bg-red-500/15 dark:hover:text-red-400'
+          : 'border-line text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 dark:border-slate-700 dark:text-slate-300 dark:hover:border-brand-400/50 dark:hover:bg-slate-700 dark:hover:text-brand-300',
       )}
     >
       <Icon aria-hidden="true" className="h-4 w-4" />
@@ -71,7 +71,7 @@ function StatusLine({ children, tone = 'default' }: StatusLineProps) {
       id={STATUS_ID}
       className={cn(
         'inline-flex items-center justify-center gap-2 text-xs',
-        tone === 'error' ? 'font-medium text-red-500' : 'text-slate-400',
+        tone === 'error' ? 'font-medium text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-slate-400',
       )}
     >
       {children}
@@ -159,11 +159,11 @@ export default function ProfilePhoto({
         {/* Pelat dekoratif di belakang foto. */}
         <div
           aria-hidden="true"
-          className="absolute -inset-3 rounded-[2.25rem] bg-brand-50 motion-safe:rotate-3"
+          className="absolute -inset-3 rounded-[2.25rem] bg-brand-50 motion-safe:rotate-3 dark:bg-brand-900/60"
         />
         <div
           aria-hidden="true"
-          className="absolute -bottom-5 -left-3 h-16 w-16 rounded-full border border-brand-100 bg-white/70 backdrop-blur-sm"
+          className="absolute -bottom-5 -left-3 h-16 w-16 rounded-full border border-brand-100 bg-white/70 backdrop-blur-sm dark:border-brand-900 dark:bg-slate-800/70"
         />
 
         <div
@@ -171,8 +171,8 @@ export default function ProfilePhoto({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={cn(
-            'group relative aspect-square w-full overflow-hidden rounded-[2rem] border bg-white shadow-soft transition duration-300 ease-out',
-            isDragging ? 'border-brand-600 ring-4 ring-brand-100' : 'border-line',
+            'group relative aspect-square w-full overflow-hidden rounded-[2rem] border bg-white shadow-soft transition duration-300 ease-out dark:border-slate-700 dark:bg-slate-800',
+            isDragging ? 'border-brand-600 ring-4 ring-brand-100 dark:border-brand-400 dark:ring-brand-500/30' : 'border-line',
           )}
         >
           {photoUrl ? (
@@ -188,15 +188,15 @@ export default function ProfilePhoto({
               type="button"
               onClick={openFilePicker}
               aria-describedby={STATUS_ID}
-              className="flex h-full w-full flex-col items-center justify-center gap-4 px-6 text-center transition duration-200 hover:bg-brand-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600"
+              className="flex h-full w-full flex-col items-center justify-center gap-4 px-6 text-center transition duration-200 hover:bg-brand-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600 dark:hover:bg-slate-700/60 dark:focus-visible:ring-brand-400"
             >
-              <span className="flex h-24 w-24 items-center justify-center rounded-full bg-brand-50 font-display text-3xl font-extrabold tracking-tight text-brand-600">
+              <span className="flex h-24 w-24 items-center justify-center rounded-full bg-brand-50 font-display text-3xl font-extrabold tracking-tight text-brand-600 dark:bg-brand-900/60 dark:text-brand-300">
                 {initials}
               </span>
-              <span className="text-xs font-medium text-slate-400">
+              <span className="text-xs font-medium text-slate-400 dark:text-slate-400">
                 Foto profil belum ditambahkan
               </span>
-              <span className="inline-flex h-10 items-center gap-2 rounded-pill bg-brand-600 px-4 text-sm font-semibold text-white shadow-soft">
+              <span className="inline-flex h-10 items-center gap-2 rounded-pill bg-brand-600 px-4 text-sm font-semibold text-white shadow-soft dark:bg-brand-400 dark:text-navy">
                 <ImageUp aria-hidden="true" className="h-4 w-4" />
                 {uiCopy.uploadPhoto}
               </span>
@@ -253,13 +253,13 @@ export default function ProfilePhoto({
         </div>
 
         {institution ? (
-          <div className="absolute -bottom-4 left-4 z-10 flex items-center gap-2.5 rounded-2xl border border-line bg-white/95 px-3.5 py-2.5 shadow-soft backdrop-blur-sm sm:left-6">
+          <div className="absolute -bottom-4 left-4 z-10 flex items-center gap-2.5 rounded-2xl border border-line bg-white/95 px-3.5 py-2.5 shadow-soft backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/95 sm:left-6">
             <IconTile icon={GraduationCap} size="sm" tone="soft" />
             <span className="text-left">
-              <span className="block text-[11px] font-medium tracking-wide text-slate-400 uppercase">
+              <span className="block text-[11px] font-medium tracking-wide text-slate-400 uppercase dark:text-slate-400">
                 Education
               </span>
-              <span className="block text-xs font-semibold text-navy">
+              <span className="block text-xs font-semibold text-navy dark:text-slate-100">
                 {institution}
               </span>
             </span>
