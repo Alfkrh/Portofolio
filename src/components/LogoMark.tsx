@@ -9,6 +9,7 @@
  */
 
 import { useId } from 'react'
+import { assetUrl } from '../lib/assetUrl'
 import { cn } from '../lib/cn'
 
 interface LogoMarkProps {
@@ -40,7 +41,7 @@ export default function LogoMark({ className, title, src }: LogoMarkProps) {
         )}
       >
         <img
-          src={src}
+          src={assetUrl(src)}
           alt={title ?? ''}
           aria-hidden={title ? undefined : true}
           className="h-full w-full object-cover"

@@ -7,6 +7,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import { ImageUp, LoaderCircle, Trash2, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { assetUrl } from '../../lib/assetUrl'
 import { cn } from '../../lib/cn'
 import {
   createOptimizedPhoto,
@@ -308,7 +309,7 @@ export function ImageFieldControl({
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-line bg-surface sm:w-44 sm:shrink-0">
         {value ? (
           <img
-            src={value}
+            src={assetUrl(value)}
             alt={`Pratinjau ${label}`}
             decoding="async"
             className="h-full w-full object-cover"

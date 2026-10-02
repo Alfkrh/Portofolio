@@ -26,6 +26,66 @@ npm run lint     # eslint
 `npm run dev` sudah termasuk backend: API dipasang sebagai middleware di dev
 server Vite, jadi tidak perlu menjalankan proses kedua.
 
+## Deploy
+
+Aplikasi ini **bukan situs statis**: halaman publik membaca seluruh kontennya
+dari `GET /api/portfolio`, jadi ada dua bagian yang harus di-deploy.
+
+### Kenapa build statis saja (Vercel) menghasilkan error
+
+Vercel hanya menyajikan hasil build frontend dan tidak menjalankan
+`npm start` (`server/index.ts`) sebagai proses yang hidup terus. Tidak ada pula
+`vercel.json`/folder `api/` yang mendaftarkan route `/api/*`, sehingga
+`/api/portfolio` membalas 404 dan halaman publik menampilkan “Konten portfolio
+gagal dimuat”. Selain itu `server/data/` (SQLite + uploads) ada di `.gitignore`
+dan filesystem Vercel bersifat sementara, jadi data admin dan foto yang
+diunggah tidak akan bertahan.
+
+### Yang dipakai sekarang: frontend di Vercel + API di host Node
+
+**1. Deploy backend** ke host yang menjalankan proses Node terus-menerus dan
+menyediakan disk permanen (Render, Railway, atau VPS).
+
+| Setelan | Nilai |
+| ------- | ----- |
+| Build   | `npm install` |
+| Start   | `npm start` |
+| Node    | 24 (lihat `engines` di `package.json`) |
+| Disk    | mount permanen, mis. di `/var/data` |
+
+Env yang perlu diisi di backend:
+
+```bash
+PORTFOLIO_DATA_DIR=/var/data          # database + uploads di disk permanen
+PORTFOLIO_CORS_ORIGIN=https://nama-proyek-anda.vercel.app
+# PORT disediakan platform; server otomatis bind ke 0.0.0.0 saat PORT di-set.
+```
+
+`PORTFOLIO_CORS_ORIGIN` **wajib** benar di sini. Tanpa itu browser memblokir
+semua respons API karena frontend dan backend berbeda origin. Isinya boleh
+beberapa origin dipisah koma (mis. domain produksi + domain preview).
+
+**2. Deploy frontend** ke Vercel seperti biasa, lalu tambahkan env:
+
+```bash
+VITE_API_BASE=https://backend-anda.onrender.com/api
+```
+
+Variabel ini dibaca Vite **saat build**, jadi isi dulu di
+Project Settings → Environment Variables, baru deploy ulang. `vercel.json` sudah
+menyediakan rewrite SPA supaya tautan langsung seperti `/admin` tidak 404,
+tanpa menelan route `/api/*`.
+
+**3. Cek hasilnya:**
+
+- `https://backend-anda.onrender.com/api/portfolio` mengembalikan JSON konten.
+- Foto profil & thumbnail tampil — keduanya disajikan dari origin backend, dan
+  backend harus HTTPS agar tidak diblokir sebagai mixed content.
+- Perubahan dari dashboard langsung terlihat di halaman publik.
+
+> Catatan: file upload ikut tinggal di disk backend. Kalau disknya ephemeral
+> (mis. plan gratis), foto akan hilang setiap deploy/restart.
+
 ## Arsitektur
 
 ```
@@ -107,7 +167,8 @@ cukup memanggil `setAdminToken()`.
 | Variabel                 | Default              | Keterangan                        |
 | ------------------------ | -------------------- | --------------------------------- |
 | `PORT`                   | `3000`               | Port `npm run start`              |
-| `HOST`                   | `127.0.0.1`          | Host `npm run start`              |
+| `HOST`                   | `127.0.0.1`          | Host bind; otomatis `0.0.0.0` bila `PORT` diisi platform |
+| `PORTFOLIO_CORS_ORIGIN`  | `*`                  | Origin frontend yang boleh mengakses API (CORS) |
 | `PORTFOLIO_DATA_DIR`     | `server/data`        | Folder database + upload          |
 | `PORTFOLIO_DB_PATH`      | `<data>/portfolio.db`| Path file SQLite                  |
 | `PORTFOLIO_ADMIN_TOKEN`  | _(kosong)_           | Token wajib untuk request tulis   |

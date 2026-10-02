@@ -42,6 +42,11 @@
  * pada endpoint tulis, dan dashboard menampilkan halaman "Access Denied".
  * `PORTFOLIO_ADMIN_TOKEN` (bila di-set di env) tetap diterima sebagai
  * kredensial cadangan untuk skrip/otomasi dan diperlakukan sebagai role admin.
+ *
+ * CORS: setiap respons `/api/*` dan `/uploads/*` diberi header CORS, dan
+ * preflight `OPTIONS` dijawab lebih dulu (tanpa memeriksa sesi). Isi
+ * `PORTFOLIO_CORS_ORIGIN` dengan origin frontend bila keduanya di-host di
+ * domain berbeda; lihat `.env.example`.
  */
 
 import { randomBytes } from 'node:crypto'
@@ -436,6 +441,57 @@ function serveUpload(req: IncomingMessage, res: ServerResponse, pathname: string
   createReadStream(filePath).pipe(res)
 }
 
+/* ----------------------------------- CORS ---------------------------------- */
+
+/**
+ * Header CORS untuk akses dari browser.
+ *
+ * Saat frontend dan backend berada di origin berbeda (mis. frontend di Vercel,
+ * API Node di Render/Railway), browser menolak membaca respons yang tidak
+ * membawa header `access-control-*`. Request tulis dengan header
+ * `content-type`/`authorization` juga memicu preflight `OPTIONS`, sehingga
+ * preflight harus dijawab sebelum pemeriksaan sesi — request OPTIONS tidak
+ * pernah membawa header `Authorization`.
+ *
+ * `PORTFOLIO_CORS_ORIGIN` menerima satu origin atau daftar dipisah koma.
+ * Default `*` aman di sini karena autentikasi memakai header `Authorization`,
+ * bukan cookie: browser tidak mengirim kredensial apa pun secara otomatis.
+ */
+const CORS_ALLOWED_METHODS = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+const CORS_ALLOWED_HEADERS = 'accept, authorization, content-type, x-file-name'
+
+/** Origin yang boleh diakses dari browser; `null` berarti ditolak. */
+function resolveCorsOrigin(req: IncomingMessage): string | null {
+  const configured = (process.env.PORTFOLIO_CORS_ORIGIN ?? '*').trim()
+  if (configured.length === 0 || configured === '*') return '*'
+
+  const allowed = configured
+    .split(',')
+    .map((value) => value.trim().replace(/\/+$/, ''))
+    .filter((value) => value.length > 0)
+
+  const origin = req.headers.origin?.replace(/\/+$/, '')
+  if (origin && allowed.includes(origin)) return origin
+
+  if (origin) {
+    console.warn(
+      `[portfolio] origin ${origin} tidak terdaftar di PORTFOLIO_CORS_ORIGIN; browser akan memblokir responsnya.`,
+    )
+  }
+
+  return null
+}
+
+/** Pasang header CORS pada respons API. */
+function applyCors(req: IncomingMessage, res: ServerResponse): void {
+  const origin = resolveCorsOrigin(req)
+  if (!origin) return
+
+  res.setHeader('access-control-allow-origin', origin)
+  // Responsnya berbeda per origin, jadi cache harus memisahkannya.
+  if (origin !== '*') res.setHeader('vary', 'origin')
+}
+
 /* --------------------------------- routing -------------------------------- */
 
 /**
@@ -451,12 +507,26 @@ export async function handleApiRequest(
   const { pathname } = url
   const method = (req.method ?? 'GET').toUpperCase()
 
-  if (pathname.startsWith('/uploads/')) {
-    serveUpload(req, res, pathname)
+  const isUploadPath = pathname.startsWith('/uploads/')
+  if (!isUploadPath && !pathname.startsWith('/api/')) return false
+
+  applyCors(req, res)
+
+  // Preflight wajib dijawab tanpa autentikasi, kalau tidak semua request tulis
+  // cross-origin (upload, simpan pengaturan) gagal sebelum sampai ke handler.
+  if (method === 'OPTIONS') {
+    res.statusCode = 204
+    res.setHeader('access-control-allow-methods', CORS_ALLOWED_METHODS)
+    res.setHeader('access-control-allow-headers', CORS_ALLOWED_HEADERS)
+    res.setHeader('access-control-max-age', '86400')
+    res.end()
     return true
   }
 
-  if (!pathname.startsWith('/api/')) return false
+  if (isUploadPath) {
+    serveUpload(req, res, pathname)
+    return true
+  }
 
   const segments = pathname.replace('/api/', '').split('/').filter(Boolean)
   const [resource, param] = segments

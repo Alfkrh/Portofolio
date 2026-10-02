@@ -9,6 +9,7 @@ import Reveal from './ui/Reveal'
 import Section from './ui/Section'
 import SectionHeading from './ui/SectionHeading'
 import Tag from './ui/Tag'
+import { assetUrl } from '../lib/assetUrl'
 import { cn } from '../lib/cn'
 
 const ALL_FILTER = 'all'
@@ -39,7 +40,7 @@ function ProjectCard({ project }: ProjectCardProps) {
       <div className="relative aspect-[4/3] w-full overflow-hidden border-b border-line bg-surface dark:border-slate-700 dark:bg-slate-900">
         {project.thumbnail_url ? (
           <img
-            src={project.thumbnail_url}
+            src={assetUrl(project.thumbnail_url)}
             alt={`Thumbnail project ${project.title}`}
             loading="lazy"
             decoding="async"

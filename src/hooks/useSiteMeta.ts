@@ -7,6 +7,7 @@
  */
 
 import { useEffect } from 'react'
+import { assetUrl } from '../lib/assetUrl'
 import {
   SITE_SETTING_DEFAULTS,
   siteSetting,
@@ -61,6 +62,6 @@ export function useSiteMeta(
   useEffect(() => {
     document.title = title
     applyMetaTag('description', description)
-    applyFavicon(favicon)
+    applyFavicon(assetUrl(favicon))
   }, [description, favicon, title])
 }

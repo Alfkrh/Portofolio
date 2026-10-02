@@ -5,9 +5,10 @@
  * koleksi (create/update/delete) sudah disiapkan untuk admin dashboard.
  *
  * Base URL bisa di-override lewat env `VITE_API_BASE` bila API tidak berada di
- * origin yang sama.
+ * origin yang sama (lihat `src/config/apiBase.ts`).
  */
 
+import { API_BASE } from '../config/apiBase'
 import type {
   CollectionItemMap,
   CollectionName,
@@ -17,13 +18,18 @@ import type {
 } from '../types/portfolio'
 import { clearAdminToken, getAdminToken } from './adminToken'
 
-const API_BASE = (import.meta.env.VITE_API_BASE ?? '/api').replace(/\/+$/, '')
-
 export class ApiError extends Error {
   readonly status: number
 
   constructor(message: string, status: number) {
-    super(message)
+    // Pesan bisa datang dari body respons yang tidak kita duga (mis. server
+    // membalas `{ "error": { ... } }`). Tanpa guard ini, `Error` akan
+    // mencoerce-nya menjadi teks "[object Object]" yang tak berguna di UI.
+    super(
+      typeof message === 'string' && message.trim().length > 0
+        ? message
+        : `Permintaan gagal (${status}).`,
+    )
     this.name = 'ApiError'
     this.status = status
   }
@@ -54,8 +60,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
     let message = `Permintaan gagal (${response.status}).`
     try {
-      const payload = (await response.json()) as { error?: string }
-      if (payload.error) message = payload.error
+      const payload = (await response.json()) as { error?: unknown }
+      // Hanya pakai pesan server bila benar-benar berupa teks non-kosong.
+      if (typeof payload.error === 'string' && payload.error.length > 0) {
+        message = payload.error
+      }
     } catch {
       // Body bukan JSON — pakai pesan default.
     }

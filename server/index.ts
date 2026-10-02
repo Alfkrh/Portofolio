@@ -23,7 +23,12 @@ import { handleApiRequest } from './api.ts'
 import { DATA_DIR, DIST_DIR } from './db.ts'
 
 const PORT = Number(process.env.PORT ?? 3000)
-const HOST = process.env.HOST ?? '127.0.0.1'
+/**
+ * Host bind. Platform hosting (Render/Railway/Fly) menyuntikkan `PORT` dan
+ * mengharuskan server mendengarkan di semua interface, sedangkan secara lokal
+ * kita tetap default ke loopback supaya dev server tidak terekspos ke jaringan.
+ */
+const HOST = process.env.HOST ?? (process.env.PORT ? '0.0.0.0' : '127.0.0.1')
 
 const STATIC_CONTENT_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',

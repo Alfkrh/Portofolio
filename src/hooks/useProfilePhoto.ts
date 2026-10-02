@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { assetUrl } from '../lib/assetUrl'
 import { createOptimizedPhoto } from '../lib/imageFile'
 import {
   deleteProfilePhoto,
@@ -109,7 +110,10 @@ export function useProfilePhoto(
   }, [onChanged, setPreview])
 
   return {
-    photoUrl: previewUrl ?? profile?.photo_url ?? null,
+    // Foto disimpan sebagai path relatif milik server, jadi perlu diarahkan ke
+    // origin API saat frontend dan backend berada di origin berbeda.
+    photoUrl:
+      previewUrl ?? (profile?.photo_url ? assetUrl(profile.photo_url) : null),
     isProcessing,
     error,
     details,

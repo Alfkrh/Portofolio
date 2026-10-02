@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import FilterTabs, { type FilterOption } from '../../components/ui/FilterTabs'
 import Tag from '../../components/ui/Tag'
+import { assetUrl } from '../../lib/assetUrl'
 import { cn } from '../../lib/cn'
 import { navigate, useLocation } from '../../lib/useLocation'
 import type { PortfolioData, Project, ProjectFilter } from '../../types/portfolio'
@@ -544,7 +545,7 @@ export default function AdminProjects({ data, reload }: AdminProjectsProps) {
                         <span className="relative aspect-[4/3] w-20 shrink-0 overflow-hidden rounded-xl border border-line bg-brand-50">
                           {project.thumbnail_url ? (
                             <img
-                              src={project.thumbnail_url}
+                              src={assetUrl(project.thumbnail_url)}
                               alt=""
                               decoding="async"
                               className="h-full w-full object-cover"

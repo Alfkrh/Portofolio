@@ -36,9 +36,11 @@ function setSnapshot(next: PortfolioSnapshot) {
 }
 
 function toMessage(cause: unknown): string {
-  return cause instanceof Error
-    ? cause.message
-    : 'Konten portfolio gagal dimuat dari server.'
+  if (cause instanceof Error && cause.message) return cause.message
+  // Throw non-Error (mis. objek dari JSON respons) jangan dirender apa adanya:
+  // React hanya menerima teks, dan `String(objek)` menghasilkan "[object Object]".
+  if (typeof cause === 'string' && cause.trim().length > 0) return cause
+  return 'Konten portfolio gagal dimuat dari server.'
 }
 
 export function subscribePortfolio(listener: () => void): () => void {
