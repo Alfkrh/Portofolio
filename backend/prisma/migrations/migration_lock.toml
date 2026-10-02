@@ -1,0 +1,3 @@
+# Berkas ini dibuat oleh Prisma dan tidak boleh diubah manual.
+# Menentukan provider database yang dipakai semua migrasi.
+provider = "postgresql"

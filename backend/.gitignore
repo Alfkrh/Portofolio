@@ -1,0 +1,19 @@
+node_modules
+
+# Prisma Client dibuat ulang oleh `postinstall` (prisma generate), jadi tidak
+# perlu ikut masuk repo.
+src/generated
+
+# Berkas rahasia.
+.env
+.env.*
+
+# File upload runtime.
+uploads
+
+# Cluster PostgreSQL lokal (npm run db:dev) — besar dan bisa dibuat ulang.
+.pgdata
+
+# Log.
+*.log
+logs

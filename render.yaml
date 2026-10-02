@@ -1,0 +1,86 @@
+# Blueprint Render untuk backend portfolio: API Express, PostgreSQL, dan disk
+# untuk file upload.
+#
+# Cara pakai:
+#   Render Dashboard → New + → Blueprint → pilih repo ini → Apply.
+#
+# Blueprint ini membuat TIGA hal sekaligus:
+#   1. database PostgreSQL (bagian `databases` di paling bawah),
+#   2. web service `portofolio-api` yang otomatis tersambung ke database itu,
+#   3. disk permanen untuk foto profil, thumbnail, dan sertifikat.
+#
+# Frontend tetap di-deploy terpisah ke Vercel; lihat bagian "Deploy" di README
+# utama untuk langkah VITE_API_BASE-nya.
+
+services:
+  - type: web
+    name: portofolio-api
+    runtime: node
+    region: singapore
+    branch: main
+
+    # Backend berada di subfolder, bukan di akar repo.
+    rootDir: backend
+
+    # Disk permanen tidak tersedia di plan free, jadi plan berbayar termurah.
+    plan: 0.5c-512mb
+
+    # Service ber-disk tidak bisa di-scale. Database-nya sendiri ada di
+    # PostgreSQL, jadi batasan ini murni soal file upload.
+    numInstances: 1
+
+    autoDeployTrigger: commit
+
+    # `--include=dev` penting: Prisma CLI ada di devDependencies, dan dipakai
+    # oleh `postinstall` (prisma generate) maupun oleh migrate deploy di bawah.
+    buildCommand: npm ci --include=dev
+    startCommand: npm start
+
+    # Migrasi dijalankan sekali per deploy, sebelum instance baru menerima
+    # trafik — jadi tabel selalu siap sebelum versi baru melayani request.
+    preDeployCommand: npx prisma migrate deploy
+
+    # Sekaligus menguji koneksi database, bukan hanya "proses hidup".
+    healthCheckPath: /api/health
+
+    envVars:
+      # Node 24 wajib untuk Prisma 7 (minimal 20.19, direkomendasikan 22+).
+      - key: NODE_VERSION
+        value: 24.21.0
+
+      # Diisi otomatis dari database di bagian `databases` paling bawah —
+      # tidak perlu menyalin connection string manual.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: portofolio-db
+          property: connectionString
+
+      # Dibuat acak oleh Render dan disimpan sebagai rahasia.
+      - key: SESSION_SECRET
+        generateValue: true
+
+      # Origin frontend yang boleh memanggil API (CORS). Tambahkan origin lain
+      # dipisah koma bila perlu (mis. domain preview Vercel).
+      - key: FRONTEND_URL
+        value: https://portofolio-three-jade.vercel.app
+
+      # Database sudah pindah ke PostgreSQL; disk sekarang hanya menampung
+      # file upload.
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+
+    disk:
+      name: portofolio-uploads
+      mountPath: /var/data
+      sizeGB: 1
+
+databases:
+  - name: portofolio-db
+    databaseName: portofolio
+    user: portofolio
+    region: singapore
+
+    # PERHATIAN: database plan `free` DIHAPUS OTOMATIS 30 HARI setelah dibuat,
+    # dan isinya hilang. Untuk portofolio yang dipakai jangka panjang, ganti
+    # baris di bawah menjadi:  plan: 0.1c-256mb
+    plan: free

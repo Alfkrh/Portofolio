@@ -44,11 +44,25 @@ diunggah tidak akan bertahan.
 ### Yang dipakai sekarang: frontend di Vercel + API di host Node
 
 **1. Deploy backend** ke host yang menjalankan proses Node terus-menerus dan
-menyediakan disk permanen (Render, Railway, atau VPS).
+menyediakan disk permanen. Repo ini sudah menyertakan `render.yaml`, jadi di
+Render cukup:
+
+> Render Dashboard → **New +** → **Blueprint** → pilih repo ini → **Apply**.
+
+Blueprint itu membuat satu web service `portofolio-api` lengkap dengan disk 1 GB
+di `/var/data`, health check ke `/api/portfolio`, Node 24, dan
+`PORTFOLIO_CORS_ORIGIN` yang sudah diisi domain Vercel. Setiap commit ke `main`
+otomatis ter-deploy.
+
+Dua hal yang perlu diperhatikan: **disk permanen tidak tersedia di plan free
+Render**, jadi pakai plan berbayar termurah (`0.5c-512mb`); dan service ber-disk
+tidak bisa di-scale, karena SQLite hanya boleh diakses oleh satu proses.
+
+Kalau men-deploy ke host lain (Railway, Fly, VPS), setel manual:
 
 | Setelan | Nilai |
 | ------- | ----- |
-| Build   | `npm install` |
+| Build   | `npm ci` |
 | Start   | `npm start` |
 | Node    | 24 (lihat `engines` di `package.json`) |
 | Disk    | mount permanen, mis. di `/var/data` |
@@ -57,18 +71,18 @@ Env yang perlu diisi di backend:
 
 ```bash
 PORTFOLIO_DATA_DIR=/var/data          # database + uploads di disk permanen
-PORTFOLIO_CORS_ORIGIN=https://nama-proyek-anda.vercel.app
+PORTFOLIO_CORS_ORIGIN=https://portofolio-three-jade.vercel.app
 # PORT disediakan platform; server otomatis bind ke 0.0.0.0 saat PORT di-set.
 ```
 
-`PORTFOLIO_CORS_ORIGIN` **wajib** benar di sini. Tanpa itu browser memblokir
-semua respons API karena frontend dan backend berbeda origin. Isinya boleh
-beberapa origin dipisah koma (mis. domain produksi + domain preview).
+`PORTFOLIO_CORS_ORIGIN` **wajib** benar. Tanpa itu browser memblokir semua
+respons API karena frontend dan backend berbeda origin. Isinya boleh beberapa
+origin dipisah koma (mis. domain produksi + domain preview Vercel).
 
 **2. Deploy frontend** ke Vercel seperti biasa, lalu tambahkan env:
 
 ```bash
-VITE_API_BASE=https://backend-anda.onrender.com/api
+VITE_API_BASE=https://portofolio-api.onrender.com/api
 ```
 
 Variabel ini dibaca Vite **saat build**, jadi isi dulu di
@@ -78,13 +92,27 @@ tanpa menelan route `/api/*`.
 
 **3. Cek hasilnya:**
 
-- `https://backend-anda.onrender.com/api/portfolio` mengembalikan JSON konten.
+- `https://portofolio-api.onrender.com/api/portfolio` mengembalikan JSON konten.
 - Foto profil & thumbnail tampil — keduanya disajikan dari origin backend, dan
   backend harus HTTPS agar tidak diblokir sebagai mixed content.
 - Perubahan dari dashboard langsung terlihat di halaman publik.
 
 > Catatan: file upload ikut tinggal di disk backend. Kalau disknya ephemeral
 > (mis. plan gratis), foto akan hilang setiap deploy/restart.
+
+### Alternatif: Docker
+
+`Dockerfile` yang disertakan membangun image yang menjalankan API sekaligus
+menyajikan hasil build frontend, jadi cocok untuk Railway, Fly, atau VPS:
+
+```bash
+docker build -t portofolio .
+docker run -p 3000:3000 -v portofolio-data:/var/data portofolio
+```
+
+Di Render, `render.yaml` memakai `runtime: node` sehingga Dockerfile diabaikan.
+Kalau Anda lebih suka Render membangun image Docker, ubah `runtime: node`
+menjadi `runtime: docker` di `render.yaml`.
 
 ## Arsitektur
 

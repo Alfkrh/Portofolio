@@ -1,0 +1,235 @@
+// Schema Prisma untuk backend portfolio.
+//
+// Catatan penamaan: field sengaja memakai snake_case supaya kontrak API-nya
+// sama persis dengan tipe yang sudah dipakai frontend dan database SQLite lama.
+// Dengan begitu tidak ada lapisan penerjemah nama field yang bisa jadi sumber
+// bug, dan data lama bisa dipetakan apa adanya saat migrasi.
+//
+// Setiap tabel punya `sort_order` (kecuali tabel singleton) supaya urutan
+// tampil bisa diatur dari dashboard.
+
+// Generator `prisma-client-js`: satu-satunya generator Prisma 7 yang
+// mengeluarkan JavaScript siap-pakai. Generator baru (`prisma-client`) hanya
+// bisa menghasilkan TypeScript, yang tidak cocok untuk backend JS murni ini.
+//
+// `output` wajib diisi di Prisma 7 — client tidak lagi dibuat di node_modules,
+// jadi folder `src/generated` di-gitignore dan dibuat ulang oleh `postinstall`.
+// URL database juga tidak lagi ditulis di sini; tempatnya di `prisma.config.js`.
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/* ---------------------------------- admin --------------------------------- */
+
+/// Akun admin dashboard. Password selalu disimpan sebagai hash scrypt.
+model AdminUser {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  password_hash String
+  /// Hanya akun ber-role `admin` yang boleh membuka dashboard.
+  role          String   @default("admin")
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  sessions AdminSession[]
+
+  @@map("admin_users")
+}
+
+/// Sesi login. Token aslinya tidak pernah disimpan — hanya hash SHA-256-nya,
+/// jadi bocornya isi database tidak langsung memberi token yang bisa dipakai.
+model AdminSession {
+  id         Int       @id @default(autoincrement())
+  token_hash String    @unique
+  user_id    Int
+  created_at DateTime  @default(now())
+  expires_at DateTime
+
+  user AdminUser @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("admin_sessions")
+}
+
+/* --------------------------------- konten -------------------------------- */
+
+/// Profil pemilik website. Tabel singleton: selalu tepat satu baris (id = 1).
+model Profile {
+  id                Int      @id @default(1)
+  name              String
+  logo              String?
+  greeting          String?
+  headline          String?
+  short_description String?
+  availability      String?
+  bio               String?
+  education         String?
+  major             String?
+  /// Daftar fokus keahlian, disimpan sebagai array teks PostgreSQL.
+  focus             String[]
+  status            String?
+  photo_url         String?
+  /// Kontak langsung yang tampil di section Contact.
+  email             String?
+  location          String?
+  updated_at        DateTime @updatedAt
+
+  @@map("profile")
+}
+
+model Skill {
+  id         Int      @id @default(autoincrement())
+  name       String
+  category   String
+  /// Tingkat penguasaan 1–5. Labelnya ("Pemula" … "Expert") diatur di UI.
+  level      Int?
+  icon_url   String?
+  sort_order Int      @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([category])
+  @@map("skills")
+}
+
+model Experience {
+  id          Int       @id @default(autoincrement())
+  position    String
+  company     String
+  company_logo_url String?
+  /// Punya nilai default supaya entri bisa dibuat tanpa mengisi jenisnya.
+  type        String    @default("Work Experience")
+  start_date  String?
+  end_date    String?
+  /// Penanda eksplisit "masih berjalan" supaya UI tidak perlu menebak dari
+  /// `end_date` yang kosong.
+  is_current  Boolean   @default(false)
+  description String?
+  skills      String[]
+  sort_order  Int       @default(0)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@map("experience")
+}
+
+model Project {
+  id               Int       @id @default(autoincrement())
+  title            String
+  description      String?
+  full_description String?
+  category         String?
+  thumbnail_url    String?
+  /// Daftar teknologi yang dipakai, mis. ["React", "Tailwind CSS"].
+  tools            String[]
+  url              String?
+  github_url       String?
+  /// Kolom `tags` menyimpan key filter (lihat ProjectFilter).
+  tags             String[]
+  /// Tanggal pengerjaan/publikasi project (opsional).
+  project_date     String?
+  featured         Boolean   @default(false)
+  published        Boolean   @default(true)
+  sort_order       Int       @default(0)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  @@index([published])
+  @@map("projects")
+}
+
+/// Filter section Projects (mis. "UI/UX", "Web Development"). Key-nya dirujuk
+/// oleh kolom `Project.tags`.
+model ProjectFilter {
+  id         Int    @id @default(autoincrement())
+  key        String @unique
+  label      String
+  sort_order Int    @default(0)
+
+  @@map("project_filters")
+}
+
+model Education {
+  id          Int       @id @default(autoincrement())
+  institution String
+  degree      String?
+  major       String?
+  start_year  String?
+  end_year    String?
+  description String?
+  sort_order  Int       @default(0)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@map("education")
+}
+
+/// Sertifikat. Resource baru yang belum ada di backend lama.
+model Certificate {
+  id             Int       @id @default(autoincrement())
+  name           String
+  issuer         String
+  date           String?
+  credential_id  String?
+  credential_url String?
+  image_url      String?
+  published      Boolean   @default(true)
+  sort_order     Int       @default(0)
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+
+  @@map("certificates")
+}
+
+/// Tautan sosial & kontak. `platform` menentukan ikon mana yang dipakai UI
+/// (mis. "linkedin", "github", "email"); `icon_url` bisa menimpanya.
+model SocialLink {
+  id         Int      @id @default(autoincrement())
+  platform   String
+  label      String?
+  value      String?
+  url        String?
+  icon_url   String?
+  is_active  Boolean  @default(true)
+  sort_order Int      @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("social_links")
+}
+
+/* --------------------------- pengaturan & pesan --------------------------- */
+
+/// Teks section yang bisa diedit dari dashboard (judul, eyebrow, CTA).
+model Section {
+  key   String @id
+  value String
+
+  @@map("sections")
+}
+
+/// Pengaturan tingkat situs (nama, judul tab, deskripsi, favicon).
+model Setting {
+  key   String  @id
+  value String?
+
+  @@map("settings")
+}
+
+/// Pesan dari form Contact di halaman publik.
+model ContactMessage {
+  id         Int      @id @default(autoincrement())
+  name       String
+  email      String
+  message    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  @@index([is_read])
+  @@map("contact_messages")
+}
